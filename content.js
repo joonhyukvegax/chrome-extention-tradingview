@@ -35,7 +35,6 @@ function addButton() {
         // first-tBgV1m0B 라벨을 가지고 있는 테그
         const labelElem = cell.classList.contains("first-tBgV1m0B");
         if (labelElem) {
-          alert('label');
           const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
           if (labelInnerElem) {
             obj = {
@@ -74,9 +73,20 @@ function addButton() {
       link.click();
       document.body.removeChild(link);
       
+      
       const okButton = document.querySelector('button[data-name="submit-button"]');
       if (okButton) {
         okButton.click();
+        // 강제 클릭 이벤트 발생
+        const event = new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        });
+        okButton.dispatchEvent(event);
+        alert("Data saved",okButton.innerText);
+      } else {
+        console.log("Ok button not found");
       }
 
       const strategyGroup = document.querySelector(".strategyGroup-zf0MHBzY");
