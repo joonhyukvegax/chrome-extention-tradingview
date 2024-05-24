@@ -1,5 +1,5 @@
 function addButton() {
-  // 'content-tBgV1m0B' 클래스를 가진 요소를 찾습니다.
+  // Inut Grid element
   const targetElement = document.querySelector(".content-tBgV1m0B");
 
   if (targetElement) {
@@ -38,15 +38,17 @@ function addButton() {
       if (okButton) {
         okButton.click();
       }
-      const strategyGroup = document.querySelector(".strategyGroup-zf0MHBzY");
 
-      const strategyTesterTab = strategyGroup.querySelector(
+      const strategyTesterTab = document.querySelector(
         'button[id="Performance Summary"]'
       );
+
       if (strategyTesterTab) {
         strategyTesterTab.click();
 
-        const strategyButtons = document.querySelectorAll(
+        const strategyGroup = document.querySelector(".strategyGroup-zf0MHBzY");
+
+        const strategyButtons = strategyGroup.querySelectorAll(
           ".apply-common-tooltip"
         );
         if (strategyButtons.length > 0) {
