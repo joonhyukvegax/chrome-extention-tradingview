@@ -73,8 +73,10 @@ function addButton() {
       link.click();
       document.body.removeChild(link);
       
+      const footerElement = document.querySelector(".footer-PhMf7PhQ");
+
+      const okButton = footerElement.querySelector('.button-D4RPB3ZC');
       
-      const okButton = document.querySelector('button[data-name="submit-button"]');
       if (okButton) {
         okButton.click();
         // 강제 클릭 이벤트 발생
@@ -84,29 +86,48 @@ function addButton() {
           cancelable: true
         });
         okButton.dispatchEvent(event);
-        alert("Data saved",okButton.innerText);
+        // alert("Data saved",okButton.innerText);
       } else {
         console.log("Ok button not found");
       }
+      const strategyTab = document.getElementById("id_report-tabs_tablist");
 
-      const strategyGroup = document.querySelector(".strategyGroup-zf0MHBzY");
-      if (strategyGroup) {
-        const targetButton = strategyGroup.querySelector(
-          '.apply-common-tooltip.light-button-bYDQcOkp.no-content-bYDQcOkp.with-start-icon-bYDQcOkp.variant-ghost-bYDQcOkp.color-gray-bYDQcOkp.size-small-bYDQcOkp.typography-regular16px-bYDQcOkp.disable-active-state-styles-bYDQcOkp'
-        );
-        if (targetButton) {
-          targetButton.click();
+      if (strategyTab) {
+        const summaryTab = strategyTab.querySelector('#Performance\\ Summary');
+        if (summaryTab) {
+          setTimeout(() => {
+            summaryTab.click();
+          }, 1000);
+          
         } else {
-          console.log("Target button not found");
+          console.log("Summary tab not found");
         }
       } else {
-        console.log("Strategy group not found");
+        console.log("Strategy tab list not found");
+      }
+
+
+      
+      // 다운로드 있는 부분 
+      const strategyGroup = document.querySelector(".fixedContent-zf0MHBzY");
+
+      if (strategyGroup) {
+        
+        const saveButton = strategyGroup.querySelector(".apply-common-tooltip.light-button-bYDQcOkp.no-content-bYDQcOkp.with-start-icon-bYDQcOkp.variant-ghost-bYDQcOkp.color-gray-bYDQcOkp.size-small-bYDQcOkp.typography-regular16px-bYDQcOkp.disable-active-state-styles-bYDQcOkp");
+        // 버튼이 존재하는지 확인한 후 클릭합니다.
+        if (saveButton) {
+          saveButton.click();
+        } else {
+          alert("Save button not found");
+        }
+      } else {
+        
+        alert("Strategy group not found");
       }
     });
-
     targetElement.appendChild(button);
   } else {
-    console.log("Target element not found");
+    alert("open Inputs Dialog");
   }
 }
 
