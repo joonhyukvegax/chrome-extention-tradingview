@@ -6,7 +6,10 @@ function addButton() {
     const button = document.createElement("button");
     button.innerText = "Test";
     button.style.marginTop = "10px";
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
+      // 지연 함수
+      const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
       let data = [];
 
       const cells = targetElement.querySelectorAll(".cell-tBgV1m0B");
@@ -61,21 +64,32 @@ function addButton() {
           }
         }
       }
+      const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+        return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
+      };
 
       // 데이터를 CSV 형식으로 변환
       let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Inputs";
+      csvContent += "\n\n";
+
+      const currentDate = new Date();
+      const kstDate = new Date(currentDate.getTime() + 9 * 60 * 60 * 1000); // 한국 시간 (UTC+9)
+
+      csvContent += formatDate(kstDate) + "\n";
+
+      csvContent += "\n\n";
       data.forEach((row) => {
         csvContent += `${row.label},${row.value}\n`;
       });
 
-      // CSV 파일 다운로드
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "input_values.csv");
-      document.body.appendChild(link); // Firefox는 필요합니다.
-      link.click();
-      document.body.removeChild(link);
+      csvContent += "\n\n";
 
       const footerElement = document.querySelector(".footer-PhMf7PhQ");
 
@@ -90,23 +104,22 @@ function addButton() {
           cancelable: true,
         });
         okButton.dispatchEvent(event);
-        // alert("Data saved",okButton.innerText);
       } else {
-        console.log("Ok button not found");
+        console.error("Ok button not found");
       }
       const strategyTab = document.getElementById("id_report-tabs_tablist");
 
       if (strategyTab) {
         const summaryTab = strategyTab.querySelector("#Performance\\ Summary");
         if (summaryTab) {
-          setTimeout(() => {
-            summaryTab.click();
-          }, 1000);
+          await delay(1000);
+
+          summaryTab.click();
         } else {
-          console.log("Summary tab not found");
+          console.error("Summary tab not found");
         }
       } else {
-        console.log("Strategy tab list not found");
+        console.error("Strategy tab list not found");
       }
 
       // // 다운로드 있는 부분
@@ -142,7 +155,8 @@ function addButton() {
               .map((child) => child.innerText.trim())
               .join(" ")
               .replace(/\u00A0/g, "")
-              .replace(/\n/g, " ");
+              .replace(/\n/g, " ")
+              .replace(/#/g, " ");
             console.error(combinedText);
             rowData.push(combinedText);
           });
@@ -150,16 +164,16 @@ function addButton() {
           tableData.push(rowData);
         });
 
-        // console.error(JSON.stringify(tableData));
-        // console.error(JSON.parse(tableData));
-        // 데이터를 CSV 형식으로 변환
-        let csvTableContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Performance Summary";
+
+        csvContent += "\n\n";
+
         tableData.forEach((row) => {
-          csvTableContent += row.join(",") + "\n";
+          csvContent += row.join(",") + "\n";
         });
 
         // CSV 파일 다운로드
-        const encodedTableUri = encodeURI(csvTableContent);
+        const encodedTableUri = encodeURI(csvContent);
         const tableLink = document.createElement("a");
         tableLink.setAttribute("href", encodedTableUri);
         tableLink.setAttribute("download", "table_data.csv");
