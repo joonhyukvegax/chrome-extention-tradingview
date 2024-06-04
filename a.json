@@ -1,0 +1,65 @@
+[
+  ["Title", "All", "Long", "Short"],
+  [
+    "Net Profit",
+    "−94.74 USD\n−0.01%",
+    "693.68 USD\n0.07%",
+    "−788.42 USD\n−0.08%"
+  ],
+  [
+    "Gross Profit",
+    "4 043.12 USD\n0.4%",
+    "2 397.76 USD\n0.24%",
+    "1 645.36 USD\n0.16%"
+  ],
+  [
+    "Gross Loss",
+    "4 137.86 USD\n0.41%",
+    "1 704.08 USD\n0.17%",
+    "2 433.78 USD\n0.24%"
+  ],
+  ["Max Run-up", "1 414.05 USD\n0.14%", "", ""],
+  ["Max Drawdown", "1 250.55 USD\n0.13%", "", ""],
+  ["Buy & Hold Return", "386 683.89 USD\n38.67%", "", ""],
+  ["Sharpe Ratio", "−9.46", "", ""],
+  ["Sortino Ratio", "−0.994", "", ""],
+  ["Profit Factor", "0.977", "1.407", "0.676"],
+  ["Max Contracts Held", "1", "1", "1"],
+  ["Open PL", "10.14 USD\n0%", "", ""],
+  ["Commission Paid", "0.00 USD", "0.00 USD", "0.00 USD"],
+  ["Total Closed Trades", "89", "45", "44"],
+  ["Total Open Trades", "1", "0", "1"],
+  ["Number Winning Trades", "35", "22", "13"],
+  ["Number Losing Trades", "54", "23", "31"],
+  ["Percent Profitable", "39.33%", "48.89%", "29.55%"],
+  ["Avg Trade", "−1.06 USD\n−0.03%", "15.42 USD\n0.37%", "−17.92 USD\n−0.44%"],
+  [
+    "Avg Winning Trade",
+    "115.52 USD\n2.69%",
+    "108.99 USD\n2.57%",
+    "126.57 USD\n2.9%"
+  ],
+  [
+    "Avg Losing Trade",
+    "76.63 USD\n1.79%",
+    "74.09 USD\n1.73%",
+    "78.51 USD\n1.84%"
+  ],
+  ["Ratio Avg Win / Avg Loss", "1.508", "1.471", "1.612"],
+  [
+    "Largest Winning Trade",
+    "485.17 USD\n11.48%",
+    "485.17 USD\n11.48%",
+    "248.35 USD\n5.48%"
+  ],
+  [
+    "Largest Losing Trade",
+    "272.72 USD\n6.37%",
+    "272.72 USD\n6.37%",
+    "141.93 USD\n3.28%"
+  ],
+  ["Avg # Bars in Trades", "68", "77", "58"],
+  ["Avg # Bars in Winning Trades", "106", "110", "101"],
+  ["Avg # Bars in Losing Trades", "42", "46", "40"],
+  ["Margin Calls", "0", "0", "0"]
+]

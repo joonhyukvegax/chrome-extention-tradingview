@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "DOM Button Adder",
+  "name": "(VegaX)TradingView ADD-ON",
   "version": "1.0",
   "permissions": ["activeTab", "scripting"],
   "background": {
