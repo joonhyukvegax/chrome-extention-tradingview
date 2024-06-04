@@ -3,7 +3,8 @@
   <head>
     <title>Popup</title>
     <style>
-      body {
+      .container {
+        width: 400px;
         min-width: 200px;
         min-height: 100px;
         display: flex;
@@ -19,10 +20,19 @@
         flex-direction: column;
         gap: 5px;
       }
+      .input-flex-container {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        align-items: center;
+      }
     </style>
   </head>
   <body>
-    <button id="addButton">Add Button</button>
+    <div id="container">
+      <button id="addButton">Add Button</button>
+      <button id="sendDataButton">Get Inputs</button>
+    </div>
     <div id="inputValues" class="input-container"></div>
     <script src="popup.js"></script>
   </body>

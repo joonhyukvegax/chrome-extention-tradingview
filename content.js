@@ -1,3 +1,5 @@
+let collectedData = [];
+
 function addButton() {
   // 'content-tBgV1m0B' 클래스를 가진 요소를 찾습니다.
   const targetElement = document.querySelector(".content-tBgV1m0B");
@@ -89,6 +91,20 @@ function addButton() {
         csvContent += `${row.label},${row.value}\n`;
       });
 
+      collectedData = data;
+
+      // 데이터를 전송하는 부분
+      chrome.runtime.sendMessage(
+        { action: "sendInputValues", data: data },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+          } else {
+            console.log(response.result);
+          }
+        }
+      );
+
       csvContent += "\n\n";
 
       const footerElement = document.querySelector(".footer-PhMf7PhQ");
@@ -157,7 +173,7 @@ function addButton() {
               .replace(/\u00A0/g, "")
               .replace(/\n/g, " ")
               .replace(/#/g, " ");
-            console.error(combinedText);
+
             rowData.push(combinedText);
           });
 
@@ -177,20 +193,20 @@ function addButton() {
         const tableLink = document.createElement("a");
         tableLink.setAttribute("href", encodedTableUri);
         tableLink.setAttribute("download", "table_data.csv");
-        document.body.appendChild(tableLink); // Firefox는 필요합니다.
+        document.body.appendChild(tableLink); // Firefox handling
         tableLink.click();
         document.body.removeChild(tableLink);
 
-        // 데이터를 JSON 형식으로 변환
-        const jsonData = JSON.stringify(tableData, null, 2);
-        const jsonBlob = new Blob([jsonData], { type: "application/json" });
-        const jsonUrl = URL.createObjectURL(jsonBlob);
-        const jsonLink = document.createElement("a");
-        jsonLink.href = jsonUrl;
-        jsonLink.download = "table_data.json";
-        document.body.appendChild(jsonLink); // Firefox는 필요합니다.
-        jsonLink.click();
-        document.body.removeChild(jsonLink);
+        // // 데이터를 JSON 형식으로 변환
+        // const jsonData = JSON.stringify(tableData, null, 2);
+        // const jsonBlob = new Blob([jsonData], { type: "application/json" });
+        // const jsonUrl = URL.createObjectURL(jsonBlob);
+        // const jsonLink = document.createElement("a");
+        // jsonLink.href = jsonUrl;
+        // jsonLink.download = "table_data.json";
+        // document.body.appendChild(jsonLink);
+        // jsonLink.click();
+        // document.body.removeChild(jsonLink);
       } else {
         console.log("Table not found");
       }
@@ -201,9 +217,67 @@ function addButton() {
   }
 }
 
+function getInputs() {
+  let data = [];
+
+  const cells = document.querySelectorAll(".cell-tBgV1m0B");
+
+  let obj = {};
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+
+    const checkElem = cell.classList.contains("fill-tBgV1m0B");
+
+    if (checkElem) {
+      const labelElem = cell.querySelector(".label-ZOx_CVY3");
+      const checkbox = cell.querySelector("input[type='checkbox']");
+      if (labelElem && checkbox) {
+        obj = {
+          label: labelElem.innerText.trim(),
+          value: checkbox.checked ? "on" : "off",
+        };
+
+        data.push(obj);
+      }
+      continue;
+    }
+
+    const labelElem = cell.classList.contains("first-tBgV1m0B");
+    if (labelElem) {
+      const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
+      if (labelInnerElem) {
+        obj = {
+          label: labelInnerElem.innerText.trim(),
+          value: "",
+        };
+        const nextCell = cells[i + 1];
+        if (nextCell) {
+          const input = nextCell.querySelector("input");
+          const button = nextCell.querySelector('span[role="button"]');
+          if (input) {
+            obj.value = input.value;
+          } else if (button) {
+            const buttonTextElem = button.querySelector(
+              ".button-children-tFul0OhX span"
+            );
+            obj.value = buttonTextElem ? buttonTextElem.innerText.trim() : "";
+          }
+        }
+        data.push(obj);
+      }
+    }
+  }
+
+  return data;
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "addButton") {
     addButton();
     sendResponse({ result: "Button added" });
+  }
+  if (request.action === "getInputs") {
+    const inputs = getInputs();
+    sendResponse({ data: inputs });
   }
 });
