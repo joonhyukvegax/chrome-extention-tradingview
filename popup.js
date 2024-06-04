@@ -47,6 +47,9 @@ function displayInputValues(data) {
 
     const label = document.createElement("label");
     label.textContent = `${item.label}`;
+    const inputWrapper = document.createElement("div");
+    inputWrapper.id = "flext-container";
+
     const input = document.createElement("input");
     input.type = "text";
     input.value = item.value;
@@ -57,9 +60,14 @@ function displayInputValues(data) {
     targetInput.type = "text";
     targetInput.value = item.value;
 
+    const span = document.createElement("span");
+    span.textContent = " - ";
+    inputWrapper.appendChild(input);
+    inputWrapper.appendChild(span);
+    inputWrapper.appendChild(targetInput);
+
     div.appendChild(label);
-    div.appendChild(input);
-    div.appendChild(targetInput);
+    div.appendChild(inputWrapper);
 
     inputValuesContainer.appendChild(div);
   });
