@@ -40,35 +40,101 @@ function displayInputValues(data) {
   const inputValuesContainer = document.getElementById("inputValues");
   inputValuesContainer.innerHTML = ""; // 기존 내용 지우기
 
+  console.error(JSON.stringify(data));
   data.forEach((item) => {
     const div = document.createElement("div");
-
     div.id = "input-flex-container";
 
     const label = document.createElement("label");
     label.textContent = `${item.label}`;
-    const inputWrapper = document.createElement("div");
-    inputWrapper.id = "flext-container";
-
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = item.value;
-    input.addEventListener("input", (event) => {
-      item.value = event.target.value;
-    });
-    const targetInput = document.createElement("input");
-    targetInput.type = "text";
-    targetInput.value = item.value;
-
-    const span = document.createElement("span");
-    span.textContent = " - ";
-    inputWrapper.appendChild(input);
-    inputWrapper.appendChild(span);
-    inputWrapper.appendChild(targetInput);
 
     div.appendChild(label);
-    div.appendChild(inputWrapper);
 
-    inputValuesContainer.appendChild(div);
+    const inputWrapper = document.createElement("div");
+    inputWrapper.id = "flex-container";
+
+    // select, checkbox, number
+    switch (item.type) {
+      case "number":
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = item.value;
+        input.addEventListener("input", (event) => {
+          item.value = event.target.value;
+        });
+
+        const targetInput = document.createElement("input");
+        targetInput.type = "text";
+        targetInput.value = item.value;
+
+        const span = document.createElement("span");
+        span.textContent = " - ";
+
+        inputWrapper.appendChild(input);
+        inputWrapper.appendChild(span);
+        inputWrapper.appendChild(targetInput);
+
+        div.appendChild(label);
+        div.appendChild(inputWrapper);
+
+        inputValuesContainer.appendChild(div);
+
+        targetInput.addEventListener("input", (event) => {
+          item.value = event.target.value;
+
+          // 버튼 추가
+          let button = div.querySelector("button");
+          if (!button) {
+            button = document.createElement("button");
+            button.textContent = "Show Sequence";
+            div.appendChild(button);
+
+            button.addEventListener("click", () => {
+              const start = parseInt(input.value);
+              const end = parseInt(targetInput.value);
+
+              if (isNaN(start) || isNaN(end)) {
+                alert("Please enter valid numbers");
+                return;
+              }
+              const automationArr = {
+                targetLabel: item.label,
+                start,
+                end,
+              };
+
+              alert(automationArr);
+            });
+          }
+        });
+
+        break;
+      case "select":
+        const select = document.createElement("select");
+        select.value = item.value;
+
+        item.options.forEach((option) => {
+          const optionElement = document.createElement("option");
+          optionElement.value = option;
+          optionElement.textContent = option;
+          select.appendChild(optionElement);
+        });
+
+        div.appendChild(select);
+        inputValuesContainer.appendChild(div);
+        break;
+      case "checkbox":
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item.value === "on" ? true : false;
+
+        checkbox.addEventListener("change", (event) => {
+          item.value = event.target.checked;
+        });
+
+        div.appendChild(checkbox);
+        inputValuesContainer.appendChild(div);
+        break;
+    }
   });
 }

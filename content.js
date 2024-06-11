@@ -257,7 +257,12 @@ function getInputs() {
             const buttonTextElem = button.querySelector(
               ".button-children-tFul0OhX span"
             );
-            obj.value = buttonTextElem ? buttonTextElem.innerText.trim() : "";
+            const selectValue = buttonTextElem
+              ? buttonTextElem.innerText.trim()
+              : "";
+            obj.value = selectValue;
+            // TODO: select option 추출을 해야하면 따로 액션이 필요함 (select 클릭후 dom에서 가져와야함 click)
+            obj.options = [selectValue];
             obj.type = "select";
           }
         }
