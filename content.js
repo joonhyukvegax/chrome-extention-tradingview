@@ -200,6 +200,7 @@ async function addButton() {
   }
 }
 
+// popup.js에 전달할 값을 만드는 함수
 function getInputs() {
   let inputs = [];
 
@@ -225,6 +226,7 @@ function getInputs() {
         obj = {
           label: labelElem.innerText.trim(),
           value: checkbox.checked ? "on" : "off",
+          type: "checkbox",
         };
 
         inputs.push(obj);
@@ -236,21 +238,27 @@ function getInputs() {
     if (labelElem) {
       const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
       if (labelInnerElem) {
+        const label = labelInnerElem.innerText.trim();
         obj = {
-          label: labelInnerElem.innerText.trim(),
+          label,
           value: "",
+          type: "number", // select, checkbox, number
         };
         const nextCell = cells[i + 1];
         if (nextCell) {
+          //
           const input = nextCell.querySelector("input");
+
           const button = nextCell.querySelector('span[role="button"]');
           if (input) {
             obj.value = input.value;
           } else if (button) {
+            // select 형식의 UI
             const buttonTextElem = button.querySelector(
               ".button-children-tFul0OhX span"
             );
             obj.value = buttonTextElem ? buttonTextElem.innerText.trim() : "";
+            obj.type = "select";
           }
         }
         inputs.push(obj);
