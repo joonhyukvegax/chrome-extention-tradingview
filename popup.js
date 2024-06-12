@@ -123,7 +123,6 @@ function displayInputValues(data) {
                   );
                 }
               );
-              alert(automationArr);
             });
           }
         });

@@ -1,15 +1,24 @@
 let collectedData = [];
 
-async function addButton() {
-  // input dialog 확인
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
+};
+
+const downloadCSV = () => {
+  // loading을 위한 임의의 지연 함수
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
   if (!inputDialog) {
     return alert("open Inputs Dialog");
   }
-
-  // loading을 위한 임의의 지연 함수
-  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   let inputs = [];
 
@@ -64,15 +73,6 @@ async function addButton() {
       }
     }
   }
-  const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
-  };
 
   // 데이터를 CSV 형식으로 변환
   let csvContent = "data:text/csv;charset=utf-8,";
@@ -103,6 +103,60 @@ async function addButton() {
   );
 
   csvContent += "\n\n";
+  // table 데이터 추출
+  const table = document.querySelector(".ka-table");
+
+  if (table) {
+    const rows = table.querySelectorAll("tr");
+    const tableData = [];
+
+    rows.forEach((row) => {
+      const rowData = [];
+      const cells = row.querySelectorAll("th, td");
+
+      cells.forEach((cell) => {
+        // 모든 자식 요소의 텍스트를 하나로 결합
+        const combinedText = Array.from(cell.children)
+          .map((child) => child.innerText.trim())
+          .join(" ")
+          .replace(/\u00A0/g, "")
+          .replace(/\n/g, " ")
+          .replace(/#/g, " ");
+
+        rowData.push(combinedText);
+      });
+
+      tableData.push(rowData);
+    });
+
+    csvContent += "Performance Summary";
+
+    csvContent += "\n\n";
+
+    tableData.forEach((row) => {
+      csvContent += row.join(",") + "\n";
+    });
+
+    // CSV 파일 다운로드
+    const encodedTableUri = encodeURI(csvContent);
+    const tableLink = document.createElement("a");
+    tableLink.setAttribute("href", encodedTableUri);
+    tableLink.setAttribute("download", "table_data.csv");
+    document.body.appendChild(tableLink); // Firefox handling
+    tableLink.click();
+    document.body.removeChild(tableLink);
+  } else {
+    console.log("Table not found");
+  }
+};
+
+async function addButton() {
+  // input dialog 확인
+  const inputDialog = document.querySelector(".content-tBgV1m0B");
+
+  if (!inputDialog) {
+    return alert("open Inputs Dialog");
+  }
 
   const footerElement = document.querySelector(".footer-PhMf7PhQ");
 
@@ -154,50 +208,51 @@ async function addButton() {
   }
 
   // table 데이터 추출
-  const table = document.querySelector(".ka-table");
+  downloadCSV();
+  // const table = document.querySelector(".ka-table");
 
-  if (table) {
-    const rows = table.querySelectorAll("tr");
-    const tableData = [];
+  // if (table) {
+  //   const rows = table.querySelectorAll("tr");
+  //   const tableData = [];
 
-    rows.forEach((row) => {
-      const rowData = [];
-      const cells = row.querySelectorAll("th, td");
+  //   rows.forEach((row) => {
+  //     const rowData = [];
+  //     const cells = row.querySelectorAll("th, td");
 
-      cells.forEach((cell) => {
-        // 모든 자식 요소의 텍스트를 하나로 결합
-        const combinedText = Array.from(cell.children)
-          .map((child) => child.innerText.trim())
-          .join(" ")
-          .replace(/\u00A0/g, "")
-          .replace(/\n/g, " ")
-          .replace(/#/g, " ");
+  //     cells.forEach((cell) => {
+  //       // 모든 자식 요소의 텍스트를 하나로 결합
+  //       const combinedText = Array.from(cell.children)
+  //         .map((child) => child.innerText.trim())
+  //         .join(" ")
+  //         .replace(/\u00A0/g, "")
+  //         .replace(/\n/g, " ")
+  //         .replace(/#/g, " ");
 
-        rowData.push(combinedText);
-      });
+  //       rowData.push(combinedText);
+  //     });
 
-      tableData.push(rowData);
-    });
+  //     tableData.push(rowData);
+  //   });
 
-    csvContent += "Performance Summary";
+  //   csvContent += "Performance Summary";
 
-    csvContent += "\n\n";
+  //   csvContent += "\n\n";
 
-    tableData.forEach((row) => {
-      csvContent += row.join(",") + "\n";
-    });
+  //   tableData.forEach((row) => {
+  //     csvContent += row.join(",") + "\n";
+  //   });
 
-    // CSV 파일 다운로드
-    const encodedTableUri = encodeURI(csvContent);
-    const tableLink = document.createElement("a");
-    tableLink.setAttribute("href", encodedTableUri);
-    tableLink.setAttribute("download", "table_data.csv");
-    document.body.appendChild(tableLink); // Firefox handling
-    tableLink.click();
-    document.body.removeChild(tableLink);
-  } else {
-    console.log("Table not found");
-  }
+  //   // CSV 파일 다운로드
+  //   const encodedTableUri = encodeURI(csvContent);
+  //   const tableLink = document.createElement("a");
+  //   tableLink.setAttribute("href", encodedTableUri);
+  //   tableLink.setAttribute("download", "table_data.csv");
+  //   document.body.appendChild(tableLink); // Firefox handling
+  //   tableLink.click();
+  //   document.body.removeChild(tableLink);
+  // } else {
+  //   console.log("Table not found");
+  // }
 }
 
 // popup.js에 전달할 값을 만드는 함수
@@ -273,10 +328,11 @@ function getInputs() {
 
   return inputs;
 }
-
-function updateInput(data) {
+async function updateInput(data) {
   // input dialog 확인
   const inputDialog = document.querySelector(".content-tBgV1m0B");
+
+  const targetLabel = data.targetLabel;
 
   if (!inputDialog) {
     return alert("open Inputs Dialog");
@@ -291,7 +347,7 @@ function updateInput(data) {
 
     const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
 
-    if (labelElem && labelInnerElem.innerText.trim() === data.targetLabel) {
+    if (labelElem && labelInnerElem.innerText.trim() === targetLabel) {
       const nextCell = cells[i + 1];
 
       if (nextCell) {
@@ -306,41 +362,37 @@ function updateInput(data) {
           const buttons = nextCell
             .querySelector(".controlWrapper-DBTazUk2")
             .querySelectorAll("button");
-
           const increaseButton = buttons[0];
           const decreaseButton = buttons[1];
+
+          const end = data.end;
+          let current = parseInt(input.value);
+
+          // end 값에 도달할 때까지 클릭
+          const interval = setInterval(() => {
+            if (current < end) {
+              increaseButton.click();
+              current++;
+              delay(500);
+              downloadCSV();
+            } else if (current > end) {
+              decreaseButton.click();
+              current--;
+              delay(500);
+              downloadCSV();
+            } else {
+              clearInterval(interval); // 목표값에 도달하면 반복을 중지
+            }
+          }, 1000); // 클릭 간격을 100ms로 설정
 
           let curValue = parseInt(input.value);
           curValue += 1;
           input.value = curValue;
 
-          const event = new KeyboardEvent("keydown", {
-            key: "Enter",
-            code: "Enter",
-            which: 13,
-            keyCode: 13,
-            bubbles: true,
-          });
-          input.dispatchEvent(event);
           alert(input.value);
         }
-        // else if (button) {
-        //   const buttonTextElem = button.querySelector(
-        //     ".button-children-tFul0OhX span"
-        //   );
-        //   obj.value = buttonTextElem ? buttonTextElem.innerText.trim() : "";
-        // }
       }
 
-      // const input = cell.querySelector("input[type='text']");
-      // if (input) {
-      //   input.value = data.start;
-      // }
-      // const targetInput =
-      //   cell.nextElementSibling.querySelector("input[type='text']");
-      // if (targetInput) {
-      //   targetInput.value = data.end;
-      // }
       break;
     }
   }
@@ -356,7 +408,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ data: inputs });
   }
   if (request.action === "updateInput") {
-    alert(JSON.stringify(request.data));
     updateInput(request.data);
     sendResponse({ result: "Input updated" });
   }
