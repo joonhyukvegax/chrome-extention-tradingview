@@ -274,6 +274,78 @@ function getInputs() {
   return inputs;
 }
 
+function updateInput(data) {
+  // input dialog 확인
+  const inputDialog = document.querySelector(".content-tBgV1m0B");
+
+  if (!inputDialog) {
+    return alert("open Inputs Dialog");
+  }
+
+  const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
+
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+
+    const labelElem = cell.classList.contains("first-tBgV1m0B");
+
+    const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
+
+    if (labelElem && labelInnerElem.innerText.trim() === data.targetLabel) {
+      const nextCell = cells[i + 1];
+
+      if (nextCell) {
+        const input = nextCell.querySelector("input");
+        // const button = nextCell.querySelector('span[role="button"]');
+
+        if (input) {
+          input.focus();
+          input.select();
+
+          // delay(200);
+          const buttons = nextCell
+            .querySelector(".controlWrapper-DBTazUk2")
+            .querySelectorAll("button");
+
+          const increaseButton = buttons[0];
+          const decreaseButton = buttons[1];
+
+          let curValue = parseInt(input.value);
+          curValue += 1;
+          input.value = curValue;
+
+          const event = new KeyboardEvent("keydown", {
+            key: "Enter",
+            code: "Enter",
+            which: 13,
+            keyCode: 13,
+            bubbles: true,
+          });
+          input.dispatchEvent(event);
+          alert(input.value);
+        }
+        // else if (button) {
+        //   const buttonTextElem = button.querySelector(
+        //     ".button-children-tFul0OhX span"
+        //   );
+        //   obj.value = buttonTextElem ? buttonTextElem.innerText.trim() : "";
+        // }
+      }
+
+      // const input = cell.querySelector("input[type='text']");
+      // if (input) {
+      //   input.value = data.start;
+      // }
+      // const targetInput =
+      //   cell.nextElementSibling.querySelector("input[type='text']");
+      // if (targetInput) {
+      //   targetInput.value = data.end;
+      // }
+      break;
+    }
+  }
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "addButton") {
     addButton();
@@ -283,4 +355,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const inputs = getInputs();
     sendResponse({ data: inputs });
   }
+  if (request.action === "updateInput") {
+    alert(JSON.stringify(request.data));
+    updateInput(request.data);
+    sendResponse({ result: "Input updated" });
+  }
 });
+
+function triggerClick(element) {
+  element.focus();
+  if (element) {
+    const event = new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+    });
+    element.dispatchEvent(event);
+  } else {
+    console.error(`Element with selector "${selector}" not found`);
+  }
+}

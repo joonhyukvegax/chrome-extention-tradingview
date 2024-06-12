@@ -102,7 +102,27 @@ function displayInputValues(data) {
                 start,
                 end,
               };
-
+              // content.js에 메시지 전송
+              chrome.tabs.query(
+                { active: true, currentWindow: true },
+                (tabs) => {
+                  if (tabs.length === 0) {
+                    console.error("No active tabs found");
+                    return;
+                  }
+                  chrome.tabs.sendMessage(
+                    tabs[0].id,
+                    { action: "updateInput", data: automationArr },
+                    (response) => {
+                      if (chrome.runtime.lastError) {
+                        console.error(chrome.runtime.lastError);
+                      } else {
+                        console.log(response.result);
+                      }
+                    }
+                  );
+                }
+              );
               alert(automationArr);
             });
           }
