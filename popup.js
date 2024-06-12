@@ -40,7 +40,6 @@ function displayInputValues(data) {
   const inputValuesContainer = document.getElementById("inputValues");
   inputValuesContainer.innerHTML = ""; // 기존 내용 지우기
 
-  console.error(JSON.stringify(data));
   data.forEach((item) => {
     const div = document.createElement("div");
     div.id = "input-flex-container";

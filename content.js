@@ -76,21 +76,19 @@ const downloadCSV = () => {
 
   // 데이터를 CSV 형식으로 변환
   let csvContent = "data:text/csv;charset=utf-8,";
-  csvContent += "Inputs";
-  csvContent += "\n\n";
 
   const currentDate = new Date();
   const kstDate = new Date(currentDate.getTime() + 9 * 60 * 60 * 1000); // 한국 시간 (UTC+9)
 
   csvContent += formatDate(kstDate) + "\n";
 
-  csvContent += "\n\n";
-  inputs.forEach((row) => {
-    csvContent += `${row.label},${row.value}\n`;
-  });
+  // 행방향으로 데이터 변환
+  let labels = inputs.map((input) => input.label);
+  let values = inputs.map((input) => input.value);
 
   collectedData = inputs;
 
+  // popup.js에 데이터 전달
   chrome.runtime.sendMessage(
     { action: "sendInputValues", data: inputs },
     (response) => {
@@ -102,8 +100,6 @@ const downloadCSV = () => {
     }
   );
 
-  csvContent += "\n\n";
-  // table 데이터 추출
   const table = document.querySelector(".ka-table");
 
   if (table) {
@@ -129,13 +125,20 @@ const downloadCSV = () => {
       tableData.push(rowData);
     });
 
-    csvContent += "Performance Summary";
+    // Title과 All 값만 추출
+    const titleIndex = tableData[0].indexOf("Title");
+    const allIndex = tableData[0].indexOf("All");
+    if (titleIndex !== -1 && allIndex !== -1) {
+      let titleRow = [];
+      let allRow = [];
 
-    csvContent += "\n\n";
-
-    tableData.forEach((row) => {
-      csvContent += row.join(",") + "\n";
-    });
+      tableData.forEach((row) => {
+        titleRow.push(row[titleIndex]);
+        allRow.push(row[allIndex]);
+      });
+      csvContent += labels.join(",") + " , ," + titleRow.join(",") + "\n";
+      csvContent += values.join(",") + " , ," + allRow.join(",") + "\n";
+    }
 
     // CSV 파일 다운로드
     const encodedTableUri = encodeURI(csvContent);
@@ -338,6 +341,9 @@ async function updateInput(data) {
     return alert("open Inputs Dialog");
   }
 
+  // 초기값 다운
+  downloadCSV();
+
   const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
 
   for (let i = 0; i < cells.length; i++) {
@@ -384,12 +390,6 @@ async function updateInput(data) {
               clearInterval(interval); // 목표값에 도달하면 반복을 중지
             }
           }, 1000); // 클릭 간격을 100ms로 설정
-
-          let curValue = parseInt(input.value);
-          curValue += 1;
-          input.value = curValue;
-
-          alert(input.value);
         }
       }
 
