@@ -368,31 +368,36 @@ async function updateInput(data) {
           const buttons = nextCell
             .querySelector(".controlWrapper-DBTazUk2")
             .querySelectorAll("button");
-          const increaseButton = buttons[0];
-          const decreaseButton = buttons[1];
 
-          const end = data.end;
-          let current = parseInt(input.value);
+          if (buttons.length > 0) {
+            const increaseButton = buttons[0];
+            const decreaseButton = buttons[1];
 
-          // end 값에 도달할 때까지 클릭
-          const interval = setInterval(() => {
-            if (current < end) {
-              increaseButton.click();
-              current++;
-              delay(500);
-              downloadCSV();
-            } else if (current > end) {
-              decreaseButton.click();
-              current--;
-              delay(500);
-              downloadCSV();
-            } else {
-              clearInterval(interval); // 목표값에 도달하면 반복을 중지
-            }
-          }, 1000); // 클릭 간격을 100ms로 설정
+            const end = data.end;
+            let current = parseInt(input.value);
+
+            // end 값에 도달할 때까지 클릭
+            const interval = setInterval(() => {
+              if (current < end) {
+                increaseButton.click();
+                current++;
+                delay(500);
+                downloadCSV();
+              } else if (current > end) {
+                decreaseButton.click();
+                current--;
+                delay(500);
+                downloadCSV();
+              } else {
+                clearInterval(interval); // 목표값에 도달하면 반복을 중지
+              }
+            }, 1000); // 클릭 간격을 1000ms로 설정
+          } else {
+            break;
+            alert("Increase and Decrease buttons not found");
+          }
         }
       }
-
       break;
     }
   }
