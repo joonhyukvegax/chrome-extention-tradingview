@@ -1,24 +1,28 @@
 let collectedData = [];
 
 // "Add Button" 버튼 클릭 시 content script에 메시지 전송
-document.getElementById("addButton").addEventListener("click", () => {
+document.getElementById("collectingAction").addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length === 0) {
       console.error("No active tabs found");
       return;
     }
-    chrome.tabs.sendMessage(tabs[0].id, { action: "addButton" }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error(chrome.runtime.lastError);
-      } else {
-        console.log(response.result);
+    chrome.tabs.sendMessage(
+      tabs[0].id,
+      { action: "collectingAction" },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError);
+        } else {
+          console.log(response.result);
+        }
       }
-    });
+    );
   });
 });
 
 // "Get Inputs" 버튼 클릭 시 수집된 데이터를 content script에 메시지로 요청
-document.getElementById("sendDataButton").addEventListener("click", () => {
+document.getElementById("getInput").addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length === 0) {
       console.error("No active tabs found");
@@ -85,7 +89,7 @@ function displayInputValues(data) {
           let button = div.querySelector("button");
           if (!button) {
             button = document.createElement("button");
-            button.textContent = "Show Sequence";
+            button.textContent = "getValues";
             div.appendChild(button);
 
             button.addEventListener("click", () => {
@@ -111,7 +115,7 @@ function displayInputValues(data) {
                   }
                   chrome.tabs.sendMessage(
                     tabs[0].id,
-                    { action: "updateInput", data: automationArr },
+                    { action: "collectAndGenerateCSV", data: automationArr },
                     (response) => {
                       if (chrome.runtime.lastError) {
                         console.error(chrome.runtime.lastError);

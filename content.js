@@ -1,4 +1,4 @@
-let collectedData = [];
+// let collectedData = [];
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -12,24 +12,20 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
 };
 
-const downloadCSV = () => {
-  // loading을 위한 임의의 지연 함수
+const gatherData = () => {
+  let gatherData = [];
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
   if (!inputDialog) {
     return alert("open Inputs Dialog");
   }
-
   let inputs = [];
 
   const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
-
-  // Input 데이터 추출 로직
   let obj = {};
   for (let i = 0; i < cells.length; i++) {
     const cell = cells[i];
 
-    // 체크박스 형식으로 라벨을 뒤에 가지고 있음
     const checkElem = cell.classList.contains("fill-tBgV1m0B");
 
     if (checkElem) {
@@ -37,25 +33,25 @@ const downloadCSV = () => {
       const checkbox = cell.querySelector("input[type='checkbox']");
       if (labelElem && checkbox) {
         obj = {
+          type: "input",
           label: labelElem.innerText.trim(),
           value: checkbox.checked ? "on" : "off",
         };
 
         inputs.push(obj);
       }
-      continue; // 이미 처리했으므로 다음 셀로 이동
+      continue;
     }
 
-    // first-tBgV1m0B 라벨을 가지고 있는 테그
     const labelElem = cell.classList.contains("first-tBgV1m0B");
     if (labelElem) {
       const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
       if (labelInnerElem) {
         obj = {
+          type: "input",
           label: labelInnerElem.innerText.trim(),
           value: "",
         };
-        // 다음 셀에서 값을 추출
         const nextCell = cells[i + 1];
         if (nextCell) {
           const input = nextCell.querySelector("input");
@@ -74,32 +70,6 @@ const downloadCSV = () => {
     }
   }
 
-  // 데이터를 CSV 형식으로 변환
-  let csvContent = "data:text/csv;charset=utf-8,";
-
-  const currentDate = new Date();
-  const kstDate = new Date(currentDate.getTime() + 9 * 60 * 60 * 1000); // 한국 시간 (UTC+9)
-
-  csvContent += formatDate(kstDate) + "\n";
-
-  // 행방향으로 데이터 변환
-  let labels = inputs.map((input) => input.label);
-  let values = inputs.map((input) => input.value);
-
-  collectedData = inputs;
-
-  // popup.js에 데이터 전달
-  chrome.runtime.sendMessage(
-    { action: "sendInputValues", data: inputs },
-    (response) => {
-      if (chrome.runtime.lastError) {
-        console.error(chrome.runtime.lastError);
-      } else {
-        console.log(response.result);
-      }
-    }
-  );
-
   const table = document.querySelector(".ka-table");
 
   if (table) {
@@ -111,7 +81,6 @@ const downloadCSV = () => {
       const cells = row.querySelectorAll("th, td");
 
       cells.forEach((cell) => {
-        // 모든 자식 요소의 텍스트를 하나로 결합
         const combinedText = Array.from(cell.children)
           .map((child) => child.innerText.trim())
           .join(" ")
@@ -125,65 +94,95 @@ const downloadCSV = () => {
       tableData.push(rowData);
     });
 
-    // Title과 All 값만 추출
     const titleIndex = tableData[0].indexOf("Title");
     const allIndex = tableData[0].indexOf("All");
     if (titleIndex !== -1 && allIndex !== -1) {
-      let titleRow = [];
-      let allRow = [];
+      let dataRow = [];
 
       tableData.forEach((row) => {
-        titleRow.push(row[titleIndex]);
-        allRow.push(row[allIndex]);
+        dataRow.push({
+          type: "table",
+          label: row[titleIndex],
+          values: {
+            all: row[allIndex],
+          },
+        });
       });
-      csvContent += labels.join(",") + " , ," + titleRow.join(",") + "\n";
-      csvContent += values.join(",") + " , ," + allRow.join(",") + "\n";
-    }
 
-    // CSV 파일 다운로드
-    const encodedTableUri = encodeURI(csvContent);
-    const tableLink = document.createElement("a");
-    tableLink.setAttribute("href", encodedTableUri);
-    tableLink.setAttribute("download", "table_data.csv");
-    document.body.appendChild(tableLink); // Firefox handling
-    tableLink.click();
-    document.body.removeChild(tableLink);
+      gatherData.push([...inputs, ...dataRow]);
+    }
   } else {
     console.log("Table not found");
   }
+  return gatherData;
 };
 
-async function addButton() {
-  // input dialog 확인
+const downloadCSV = (collectedData) => {
+  let csvContent = "data:text/csv;charset=utf-8,";
+  const currentDate = new Date();
+  const kstDate = new Date(currentDate.getTime() + 9 * 60 * 60 * 1000); // 한국 시간 (UTC+9)
+  csvContent += formatDate(kstDate) + "\n";
+
+  if (!collectedData || collectedData.length === 0) {
+    return alert("No data to download");
+  }
+
+  // Collect all unique labels for the header
+  let headers = [];
+  collectedData[0].forEach((entry) => {
+    headers.push(entry.label);
+  });
+  csvContent += headers.join(",") + "\n";
+
+  collectedData.forEach((row) => {
+    let rowData = [];
+    row.forEach((entry) => {
+      if (entry.type === "input") {
+        rowData.push(entry.value);
+      } else if (entry.type === "table") {
+        rowData.push(entry.values.all);
+      }
+    });
+    csvContent += rowData.join(",") + "\n";
+  });
+
+  const encodedTableUri = encodeURI(csvContent);
+  const tableLink = document.createElement("a");
+  tableLink.setAttribute("href", encodedTableUri);
+  tableLink.setAttribute("download", "table_data.csv");
+  document.body.appendChild(tableLink); // Firefox handling
+  tableLink.click();
+  document.body.removeChild(tableLink);
+};
+
+async function collectingAction() {
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
   if (!inputDialog) {
     return alert("open Inputs Dialog");
   }
 
-  const footerElement = document.querySelector(".footer-PhMf7PhQ");
+  // const footerElement = document.querySelector(".footer-PhMf7PhQ");
+  // const okButton = footerElement.querySelector(".button-D4RPB3ZC");
 
-  const okButton = footerElement.querySelector(".button-D4RPB3ZC");
+  // if (okButton) {
+  //   okButton.click();
 
-  if (okButton) {
-    okButton.click();
-
-    const event = new MouseEvent("click", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-    });
-    okButton.dispatchEvent(event);
-  } else {
-    console.error("Ok button not found");
-  }
+  //   const event = new MouseEvent("click", {
+  //     view: window,
+  //     bubbles: true,
+  //     cancelable: true,
+  //   });
+  //   okButton.dispatchEvent(event);
+  // } else {
+  //   console.error("Ok button not found");
+  // }
   const strategyTab = document.getElementById("id_report-tabs_tablist");
 
   if (strategyTab) {
     const summaryTab = strategyTab.querySelector("#Performance\\ Summary");
     if (summaryTab) {
       await delay(1000);
-
       summaryTab.click();
     } else {
       console.error("Summary tab not found");
@@ -194,75 +193,31 @@ async function addButton() {
 
   await delay(500);
 
-  // 다운로드 있는 부분 마지막 요소 클릭
-  const strategyGroup = document.querySelector(".fixedContent-zf0MHBzY");
+  const gatereData = gatherData();
 
-  if (strategyGroup) {
-    const buttons = strategyGroup.querySelectorAll("button");
+  //
 
-    if (buttons.length > 0) {
-      const lastButton = buttons[buttons.length - 1];
-      lastButton.click();
-    } else {
-      alert("Save button not found");
-    }
-  } else {
-    alert("Strategy Tester Tab not found");
-  }
+  // const strategyGroup = document.querySelector(".fixedContent-zf0MHBzY");
 
-  // table 데이터 추출
-  downloadCSV();
-  // const table = document.querySelector(".ka-table");
+  // if (strategyGroup) {
+  //   const buttons = strategyGroup.querySelectorAll("button");
 
-  // if (table) {
-  //   const rows = table.querySelectorAll("tr");
-  //   const tableData = [];
-
-  //   rows.forEach((row) => {
-  //     const rowData = [];
-  //     const cells = row.querySelectorAll("th, td");
-
-  //     cells.forEach((cell) => {
-  //       // 모든 자식 요소의 텍스트를 하나로 결합
-  //       const combinedText = Array.from(cell.children)
-  //         .map((child) => child.innerText.trim())
-  //         .join(" ")
-  //         .replace(/\u00A0/g, "")
-  //         .replace(/\n/g, " ")
-  //         .replace(/#/g, " ");
-
-  //       rowData.push(combinedText);
-  //     });
-
-  //     tableData.push(rowData);
-  //   });
-
-  //   csvContent += "Performance Summary";
-
-  //   csvContent += "\n\n";
-
-  //   tableData.forEach((row) => {
-  //     csvContent += row.join(",") + "\n";
-  //   });
-
-  //   // CSV 파일 다운로드
-  //   const encodedTableUri = encodeURI(csvContent);
-  //   const tableLink = document.createElement("a");
-  //   tableLink.setAttribute("href", encodedTableUri);
-  //   tableLink.setAttribute("download", "table_data.csv");
-  //   document.body.appendChild(tableLink); // Firefox handling
-  //   tableLink.click();
-  //   document.body.removeChild(tableLink);
+  //   if (buttons.length > 0) {
+  //     const lastButton = buttons[buttons.length - 1];
+  //     lastButton.click();
+  //   } else {
+  //     alert("Save button not found");
+  //   }
   // } else {
-  //   console.log("Table not found");
+  //   alert("Strategy Tester Tab not found");
   // }
+
+  downloadCSV(gatereData);
 }
 
-// popup.js에 전달할 값을 만드는 함수
 function getInputs() {
   let inputs = [];
 
-  // input dialog 확인
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
   if (!inputDialog) {
@@ -270,11 +225,9 @@ function getInputs() {
   }
 
   const cells = document.querySelectorAll(".cell-tBgV1m0B");
-
   let obj = {};
   for (let i = 0; i < cells.length; i++) {
     const cell = cells[i];
-
     const checkElem = cell.classList.contains("fill-tBgV1m0B");
 
     if (checkElem) {
@@ -300,18 +253,15 @@ function getInputs() {
         obj = {
           label,
           value: "",
-          type: "number", // select, checkbox, number
+          type: "number",
         };
         const nextCell = cells[i + 1];
         if (nextCell) {
-          //
           const input = nextCell.querySelector("input");
-
           const button = nextCell.querySelector('span[role="button"]');
           if (input) {
             obj.value = input.value;
           } else if (button) {
-            // select 형식의 UI
             const buttonTextElem = button.querySelector(
               ".button-children-tFul0OhX span"
             );
@@ -319,7 +269,6 @@ function getInputs() {
               ? buttonTextElem.innerText.trim()
               : "";
             obj.value = selectValue;
-            // TODO: select option 추출을 해야하면 따로 액션이 필요함 (select 클릭후 dom에서 가져와야함 click)
             obj.options = [selectValue];
             obj.type = "select";
           }
@@ -331,26 +280,22 @@ function getInputs() {
 
   return inputs;
 }
-async function updateInput(data) {
-  // input dialog 확인
-  const inputDialog = document.querySelector(".content-tBgV1m0B");
 
+async function collectAndGenerateCSV(data) {
+  const inputDialog = document.querySelector(".content-tBgV1m0B");
   const targetLabel = data.targetLabel;
 
   if (!inputDialog) {
     return alert("open Inputs Dialog");
   }
 
-  // 초기값 다운
-  downloadCSV();
+  gatherData();
 
   const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
 
   for (let i = 0; i < cells.length; i++) {
     const cell = cells[i];
-
     const labelElem = cell.classList.contains("first-tBgV1m0B");
-
     const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
 
     if (labelElem && labelInnerElem.innerText.trim() === targetLabel) {
@@ -358,13 +303,11 @@ async function updateInput(data) {
 
       if (nextCell) {
         const input = nextCell.querySelector("input");
-        // const button = nextCell.querySelector('span[role="button"]');
 
         if (input) {
           input.focus();
           input.select();
 
-          // delay(200);
           const buttons = nextCell
             .querySelector(".controlWrapper-DBTazUk2")
             .querySelectorAll("button");
@@ -376,24 +319,27 @@ async function updateInput(data) {
             const end = data.end;
             let current = parseInt(input.value);
 
-            // end 값에 도달할 때까지 클릭
-            const interval = setInterval(() => {
+            let collectData = [];
+
+            const interval = setInterval(async () => {
               if (current < end) {
                 increaseButton.click();
                 current++;
-                delay(500);
-                downloadCSV();
+                await delay(500);
+                const increaseInput = gatherData();
+                collectData.push(...increaseInput);
               } else if (current > end) {
                 decreaseButton.click();
                 current--;
-                delay(500);
-                downloadCSV();
+                await delay(500);
+                const decreaseInput = gatherData();
+                collectData.push(...decreaseInput);
               } else {
-                clearInterval(interval); // 목표값에 도달하면 반복을 중지
+                clearInterval(interval);
+                downloadCSV(collectData);
               }
-            }, 1000); // 클릭 간격을 1000ms로 설정
+            }, 1000);
           } else {
-            break;
             alert("Increase and Decrease buttons not found");
           }
         }
@@ -404,16 +350,16 @@ async function updateInput(data) {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "addButton") {
-    addButton();
-    sendResponse({ result: "Button added" });
+  if (request.action === "collectingAction") {
+    collectingAction();
+    sendResponse({ result: "Action completed" });
   }
   if (request.action === "getInputs") {
     const inputs = getInputs();
     sendResponse({ data: inputs });
   }
-  if (request.action === "updateInput") {
-    updateInput(request.data);
+  if (request.action === "collectAndGenerateCSV") {
+    collectAndGenerateCSV(request.data);
     sendResponse({ result: "Input updated" });
   }
 });
