@@ -1,0 +1,34 @@
+[
+  {
+    "label": "Length",
+    "value": "170",
+    "type": "number"
+  },
+  {
+    "label": "Multiplier",
+    "value": "6",
+    "type": "number"
+  },
+  {
+    "label": "Source",
+    "value": "close",
+    "type": "select",
+    "options": ["close"]
+  },
+  {
+    "label": "Use Exponential MA",
+    "value": "on",
+    "type": "checkbox"
+  },
+  {
+    "label": "Bands Style",
+    "value": "Average True Range",
+    "type": "select",
+    "options": ["Average True Range"]
+  },
+  {
+    "label": "ATR Length",
+    "value": "10",
+    "type": "number"
+  }
+]

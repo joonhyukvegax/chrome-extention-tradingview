@@ -1,4 +1,17 @@
 let collectedData = [];
+let dialogRangeInputs = []; // extention popup vaules only use number type
+
+document.getElementById("getMultipleValues").addEventListener("click", () => {
+  alert(JSON.stringify(collectedData));
+  alert(JSON.stringify(dialogRangeInputs));
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const inputWrapper = document.getElementById("flex-container");
+
+    const inputs = document.querySelectorAll("input");
+
+    inputs.forEach((input) => console.error(input.value));
+  });
+});
 
 // "Add Button" 버튼 클릭 시 content script에 메시지 전송
 document.getElementById("collectingAction").addEventListener("click", () => {

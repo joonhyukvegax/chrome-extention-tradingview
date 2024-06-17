@@ -155,6 +155,50 @@ const downloadCSV = (collectedData) => {
   document.body.removeChild(tableLink);
 };
 
+const downloadTVExell = () => {
+  const strategyGroup = document.querySelector(".fixedContent-zf0MHBzY");
+  if (strategyGroup) {
+    const buttons = strategyGroup.querySelectorAll("button");
+    if (buttons.length > 0) {
+      const lastButton = buttons[buttons.length - 1];
+      lastButton.click();
+    } else {
+      alert("Save button not found");
+    }
+  } else {
+    alert("Strategy Tester Tab not found");
+  }
+};
+
+const triggerClick = (element) => {
+  element.focus();
+  if (element) {
+    const event = new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+    });
+    element.dispatchEvent(event);
+  } else {
+    console.error(`Element with selector "${selector}" not found`);
+  }
+};
+
+const clickTVDialogOkButton = () => {
+  const footerElement = document.querySelector(".footer-PhMf7PhQ");
+  const okButton = footerElement.querySelector(".button-D4RPB3ZC");
+  if (okButton) {
+    okButton.click();
+    const event = new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+    });
+    okButton.dispatchEvent(event);
+  } else {
+    console.error("Ok button not found");
+  }
+};
 async function collectingAction() {
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
@@ -162,21 +206,8 @@ async function collectingAction() {
     return alert("open Inputs Dialog");
   }
 
-  // const footerElement = document.querySelector(".footer-PhMf7PhQ");
-  // const okButton = footerElement.querySelector(".button-D4RPB3ZC");
+  // clickTVDialogOkButton();
 
-  // if (okButton) {
-  //   okButton.click();
-
-  //   const event = new MouseEvent("click", {
-  //     view: window,
-  //     bubbles: true,
-  //     cancelable: true,
-  //   });
-  //   okButton.dispatchEvent(event);
-  // } else {
-  //   console.error("Ok button not found");
-  // }
   const strategyTab = document.getElementById("id_report-tabs_tablist");
 
   if (strategyTab) {
@@ -195,22 +226,7 @@ async function collectingAction() {
 
   const gatereData = gatherData();
 
-  //
-
-  // const strategyGroup = document.querySelector(".fixedContent-zf0MHBzY");
-
-  // if (strategyGroup) {
-  //   const buttons = strategyGroup.querySelectorAll("button");
-
-  //   if (buttons.length > 0) {
-  //     const lastButton = buttons[buttons.length - 1];
-  //     lastButton.click();
-  //   } else {
-  //     alert("Save button not found");
-  //   }
-  // } else {
-  //   alert("Strategy Tester Tab not found");
-  // }
+  downloadTVExell();
 
   downloadCSV(gatereData);
 }
@@ -282,14 +298,13 @@ function getInputs() {
 }
 
 async function collectAndGenerateCSV(data) {
+  alert(JSON.stringify(data));
   const inputDialog = document.querySelector(".content-tBgV1m0B");
   const targetLabel = data.targetLabel;
 
   if (!inputDialog) {
     return alert("open Inputs Dialog");
   }
-
-  gatherData();
 
   const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
 
@@ -320,6 +335,8 @@ async function collectAndGenerateCSV(data) {
             let current = parseInt(input.value);
 
             let collectData = [];
+            const currentData = gatherData();
+            collectData.push(...currentData);
 
             const interval = setInterval(async () => {
               if (current < end) {
@@ -363,17 +380,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ result: "Input updated" });
   }
 });
-
-function triggerClick(element) {
-  element.focus();
-  if (element) {
-    const event = new MouseEvent("click", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-    });
-    element.dispatchEvent(event);
-  } else {
-    console.error(`Element with selector "${selector}" not found`);
-  }
-}
