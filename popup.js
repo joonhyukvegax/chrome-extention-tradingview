@@ -1,15 +1,26 @@
 let collectedData = [];
 let dialogRangeInputs = []; // extention popup vaules only use number type
 
+// {"targetLabel":"Length","start":175,"end":177} 데이터 수집
 document.getElementById("getMultipleValues").addEventListener("click", () => {
-  alert(JSON.stringify(collectedData));
   alert(JSON.stringify(dialogRangeInputs));
+
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const inputWrapper = document.getElementById("flex-container");
-
-    const inputs = document.querySelectorAll("input");
-
-    inputs.forEach((input) => console.error(input.value));
+    if (tabs.length === 0) {
+      console.error("No active tabs found");
+      return;
+    }
+    chrome.tabs.sendMessage(
+      tabs[0].id,
+      { action: "getMultipleValues", data: dialogRangeInputs },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError);
+        } else {
+          console.log(response.result);
+        }
+      }
+    );
   });
 });
 
@@ -63,18 +74,27 @@ function displayInputValues(data) {
 
     const label = document.createElement("label");
     label.textContent = `${item.label}`;
+    label.value = item.label;
+    label.className = "input-label";
 
     div.appendChild(label);
 
     const inputWrapper = document.createElement("div");
+
     inputWrapper.id = "flex-container";
 
     // select, checkbox, number
     switch (item.type) {
       case "number":
+        inputWrapper.className = "input-number-wrapper";
+        const multiple_checkbox = document.createElement("input");
+        multiple_checkbox.type = "checkbox";
+        multiple_checkbox.className = "multiple_checkbox";
+
         const input = document.createElement("input");
         input.type = "text";
         input.value = item.value;
+        input.className = "range-input";
         input.addEventListener("input", (event) => {
           item.value = event.target.value;
         });
@@ -82,10 +102,29 @@ function displayInputValues(data) {
         const targetInput = document.createElement("input");
         targetInput.type = "text";
         targetInput.value = item.value;
+        input.className = "range-input";
 
         const span = document.createElement("span");
         span.textContent = " - ";
 
+        multiple_checkbox.onchange = function () {
+          if (this.checked) {
+            const start = input.value;
+            const end = targetInput.value;
+            dialogRangeInputs.push({
+              label: item.label,
+              start: parseInt(start),
+              end: parseInt(end),
+            });
+          } else {
+            dialogRangeInputs = dialogRangeInputs.filter(
+              (input) => input.label !== item.label
+            );
+          }
+          alert(JSON.stringify(dialogRangeInputs));
+        };
+
+        inputWrapper.appendChild(multiple_checkbox);
         inputWrapper.appendChild(input);
         inputWrapper.appendChild(span);
         inputWrapper.appendChild(targetInput);
@@ -113,6 +152,7 @@ function displayInputValues(data) {
                 alert("Please enter valid numbers");
                 return;
               }
+
               const automationArr = {
                 targetLabel: item.label,
                 start,

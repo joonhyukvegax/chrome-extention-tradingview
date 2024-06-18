@@ -1,5 +1,3 @@
-// let collectedData = [];
-
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const formatDate = (date) => {
@@ -12,6 +10,237 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
 };
 
+// type eachCellType = {
+//   type: "input" || "table",
+//   label: "Tp",
+//   value: "41",
+//  }
+// type eachRowType = eachCellType[]
+// type gatherDataType = eachRowType[]
+/**
+ * Gather data from TV strategy Perfomance Summary table
+ * @returns {gatherDataType} - Array of objects containing the data
+ * type eachCellType = {
+ *type: "input" || "table", 
+ * label: "Tp",
+ * value: "41",
+ * }
+ * Example:[
+   [
+      {
+         "type":"input",
+         "label":"Tp",
+         "value":"41"
+      },
+      {
+         "type":"input",
+         "label":"Sl",
+         "value":"13"
+      },
+      {
+         "type":"input",
+         "label":"Max Intraday Filled Orders",
+         "value":"7"
+      },
+      {
+         "type":"table",
+         "label":"Title",
+         "values":{
+            "all":"All"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Net Profit",
+         "values":{
+            "all":"−453.68 USD −0.05%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Gross Profit",
+         "values":{
+            "all":"4990.20 USD 0.50%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Gross Loss",
+         "values":{
+            "all":"5443.88 USD 0.54%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Max Run-up",
+         "values":{
+            "all":"468.39 USD 0.05%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Max Drawdown",
+         "values":{
+            "all":"938.69 USD 0.09%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Buy & Hold Return",
+         "values":{
+            "all":"439006.19 USD 43.90%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Sharpe Ratio",
+         "values":{
+            "all":"−27.483"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Sortino Ratio",
+         "values":{
+            "all":"−0.999"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Profit Factor",
+         "values":{
+            "all":"0.917"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Max Contracts Held",
+         "values":{
+            "all":"3"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Open PL",
+         "values":{
+            "all":"0 USD 0.00%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Commission Paid",
+         "values":{
+            "all":"0 USD"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Total Closed Trades",
+         "values":{
+            "all":"1226"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Total Open Trades",
+         "values":{
+            "all":"0"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Number Winning Trades",
+         "values":{
+            "all":"573"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Number Losing Trades",
+         "values":{
+            "all":"594"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Percent Profitable",
+         "values":{
+            "all":"46.74%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Avg Trade",
+         "values":{
+            "all":"−0.37 USD −0.01%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Avg Winning Trade",
+         "values":{
+            "all":"8.71 USD 0.21%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Avg Losing Trade",
+         "values":{
+            "all":"9.16 USD 0.22%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Ratio Avg Win / Avg Loss",
+         "values":{
+            "all":"0.95"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Largest Winning Trade",
+         "values":{
+            "all":"56.63 USD 1.31%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Largest Losing Trade",
+         "values":{
+            "all":"85.07 USD 2.41%"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Avg Bars in Trades",
+         "values":{
+            "all":"2"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Avg Bars in Winning Trades",
+         "values":{
+            "all":"2"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Avg Bars in Losing Trades",
+         "values":{
+            "all":"2"
+         }
+      },
+      {
+         "type":"table",
+         "label":"Margin Calls",
+         "values":{
+            "all":"0"
+         }
+      }
+   ]
+]
+ */
 const gatherData = () => {
   let gatherData = [];
   const inputDialog = document.querySelector(".content-tBgV1m0B");
@@ -297,8 +526,9 @@ function getInputs() {
   return inputs;
 }
 
+// button getValues
+// data = {targetLabel: "Label", start:10, end: 10}
 async function collectAndGenerateCSV(data) {
-  alert(JSON.stringify(data));
   const inputDialog = document.querySelector(".content-tBgV1m0B");
   const targetLabel = data.targetLabel;
 
@@ -365,6 +595,117 @@ async function collectAndGenerateCSV(data) {
     }
   }
 }
+function generateCombinations(arr) {
+  const results = [];
+
+  function helper(prefix, index) {
+    if (index === arr.length) {
+      results.push(prefix);
+      return;
+    }
+
+    for (let i = arr[index].start; i <= arr[index].end; i++) {
+      helper(prefix.concat(i), index + 1);
+    }
+  }
+
+  helper([], 0);
+  return results;
+}
+
+async function adjustValue(input, targetValue, increaseButton, decreaseButton) {
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      const curValue = parseInt(input.value);
+
+      if (curValue > targetValue) {
+        decreaseButton.click();
+      } else if (curValue < targetValue) {
+        increaseButton.click();
+      } else {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 100);
+  });
+}
+
+// get multiple values handle
+async function multipleCollectAndGenerateCSV(inputs) {
+  const inputLabels = inputs.map((input) => input.label);
+  const combinations = generateCombinations(inputs);
+
+  let collectData = [];
+
+  for (const combination of combinations) {
+    const labelCombination = combination.map((value, index) => {
+      return {
+        label: inputLabels[index],
+        value: value,
+      };
+    });
+
+    const inputDialog = document.querySelector(".content-tBgV1m0B");
+
+    if (!inputDialog) {
+      alert("open Inputs Dialog");
+      return;
+    }
+
+    for (const data of labelCombination) {
+      const targetLabel = data.label;
+      const targetValue = data.value;
+      const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
+
+      if (cells.length === 0) {
+        alert("No cells found");
+        return;
+      }
+
+      for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+        const labelElem = cell.classList.contains("first-tBgV1m0B");
+        const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
+
+        if (labelElem && labelInnerElem.innerText.trim() === targetLabel) {
+          const cellValue = cells[i + 1];
+          if (cellValue) {
+            const input = cellValue.querySelector("input");
+            if (input) {
+              input.focus();
+              input.select();
+
+              const buttons = cellValue
+                .querySelector(".controlWrapper-DBTazUk2")
+                .querySelectorAll("button");
+
+              if (buttons.length > 0) {
+                const increaseButton = buttons[0];
+                const decreaseButton = buttons[1];
+
+                await adjustValue(
+                  input,
+                  targetValue,
+                  increaseButton,
+                  decreaseButton
+                );
+              } else {
+                alert("Increase and Decrease buttons not found");
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // wait table loading
+    await delay(1500);
+
+    const currentData = gatherData();
+    collectData.push(...currentData);
+  }
+  downloadCSV(collectData);
+}
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "collectingAction") {
@@ -378,5 +719,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "collectAndGenerateCSV") {
     collectAndGenerateCSV(request.data);
     sendResponse({ result: "Input updated" });
+  }
+  if (request.action === "getMultipleValues") {
+    // alert(`${"getMultipleValues"}, ${JSON.stringify(request.data)}`);
+    multipleCollectAndGenerateCSV(request.data);
+    sendResponse({ result: "getMultipleValues" });
   }
 });
