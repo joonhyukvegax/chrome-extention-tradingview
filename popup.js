@@ -1,10 +1,8 @@
 let collectedData = [];
 let dialogRangeInputs = []; // extention popup vaules only use number type
 
-// {"targetLabel":"Length","start":175,"end":177} 데이터 수집
+// {"targetLabel":"Length","start":175,"end":177,offset:1} 데이터 수집
 document.getElementById("getMultipleValues").addEventListener("click", () => {
-  alert(JSON.stringify(dialogRangeInputs));
-
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length === 0) {
       console.error("No active tabs found");
@@ -69,18 +67,17 @@ function displayInputValues(data) {
   inputValuesContainer.innerHTML = ""; // 기존 내용 지우기
 
   data.forEach((item) => {
-    const div = document.createElement("div");
-    div.id = "input-flex-container";
+    const rowContainer = document.createElement("div");
+    rowContainer.className = "input-flex-container";
+
+    const labelWrapper = document.createElement("div");
+    labelWrapper.className = "label-wrapper";
 
     const label = document.createElement("label");
-    label.textContent = `${item.label}`;
+    label.textContent = `${item.label} :`;
     label.value = item.label;
-    label.className = "input-label";
-
-    div.appendChild(label);
 
     const inputWrapper = document.createElement("div");
-
     inputWrapper.id = "flex-container";
 
     // select, checkbox, number
@@ -107,46 +104,57 @@ function displayInputValues(data) {
         const span = document.createElement("span");
         span.textContent = " - ";
 
+        const offsetInput = document.createElement("input");
+        offsetInput.placeholder = "offset";
+        offsetInput.className = "offset-input";
+
         multiple_checkbox.onchange = function () {
           if (this.checked) {
             const start = input.value;
             const end = targetInput.value;
+            const offset = offsetInput.value ? offsetInput.value : 1;
             dialogRangeInputs.push({
               label: item.label,
               start: parseInt(start),
               end: parseInt(end),
+              offset: parseInt(offset),
             });
           } else {
             dialogRangeInputs = dialogRangeInputs.filter(
               (input) => input.label !== item.label
             );
           }
-          alert(JSON.stringify(dialogRangeInputs));
         };
 
-        inputWrapper.appendChild(multiple_checkbox);
+        labelWrapper.appendChild(multiple_checkbox);
+        labelWrapper.appendChild(label);
+        inputWrapper.appendChild(labelWrapper);
         inputWrapper.appendChild(input);
         inputWrapper.appendChild(span);
         inputWrapper.appendChild(targetInput);
 
-        div.appendChild(label);
-        div.appendChild(inputWrapper);
+        inputWrapper.appendChild(offsetInput);
 
-        inputValuesContainer.appendChild(div);
+        // div.appendChild(label);
+        rowContainer.appendChild(inputWrapper);
+
+        inputValuesContainer.appendChild(rowContainer);
 
         targetInput.addEventListener("input", (event) => {
           item.value = event.target.value;
 
           // 버튼 추가
-          let button = div.querySelector("button");
+          let button = rowContainer.querySelector("button");
           if (!button) {
             button = document.createElement("button");
-            button.textContent = "getValues";
-            div.appendChild(button);
+            button.className = "action-button";
+            button.textContent = `Get ${item.label} Range`;
+            rowContainer.appendChild(button);
 
             button.addEventListener("click", () => {
               const start = parseInt(input.value);
               const end = parseInt(targetInput.value);
+              const offset = parseInt(offsetInput.value);
 
               if (isNaN(start) || isNaN(end)) {
                 alert("Please enter valid numbers");
@@ -157,8 +165,9 @@ function displayInputValues(data) {
                 targetLabel: item.label,
                 start,
                 end,
+                offset,
               };
-              // content.js에 메시지 전송
+
               chrome.tabs.query(
                 { active: true, currentWindow: true },
                 (tabs) => {
@@ -195,8 +204,10 @@ function displayInputValues(data) {
           select.appendChild(optionElement);
         });
 
-        div.appendChild(select);
-        inputValuesContainer.appendChild(div);
+        labelWrapper.appendChild(label);
+        rowContainer.appendChild(labelWrapper);
+        rowContainer.appendChild(select);
+        inputValuesContainer.appendChild(rowContainer);
         break;
       case "checkbox":
         const checkbox = document.createElement("input");
@@ -206,9 +217,10 @@ function displayInputValues(data) {
         checkbox.addEventListener("change", (event) => {
           item.value = event.target.checked;
         });
-
-        div.appendChild(checkbox);
-        inputValuesContainer.appendChild(div);
+        labelWrapper.appendChild(label);
+        rowContainer.appendChild(labelWrapper);
+        rowContainer.appendChild(checkbox);
+        inputValuesContainer.appendChild(rowContainer);
         break;
     }
   });

@@ -10,236 +10,30 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
 };
 
-// type eachCellType = {
-//   type: "input" || "table",
-//   label: "Tp",
-//   value: "41",
-//  }
-// type eachRowType = eachCellType[]
-// type gatherDataType = eachRowType[]
 /**
- * Gather data from TV strategy Perfomance Summary table
+ * Gather data from TV strategy Performance Summary table
  * @returns {gatherDataType} - Array of objects containing the data
- * type eachCellType = {
- *type: "input" || "table", 
- * label: "Tp",
- * value: "41",
- * }
- * Example:[
-   [
-      {
-         "type":"input",
-         "label":"Tp",
-         "value":"41"
-      },
-      {
-         "type":"input",
-         "label":"Sl",
-         "value":"13"
-      },
-      {
-         "type":"input",
-         "label":"Max Intraday Filled Orders",
-         "value":"7"
-      },
-      {
-         "type":"table",
-         "label":"Title",
-         "values":{
-            "all":"All"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Net Profit",
-         "values":{
-            "all":"−453.68 USD −0.05%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Gross Profit",
-         "values":{
-            "all":"4990.20 USD 0.50%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Gross Loss",
-         "values":{
-            "all":"5443.88 USD 0.54%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Max Run-up",
-         "values":{
-            "all":"468.39 USD 0.05%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Max Drawdown",
-         "values":{
-            "all":"938.69 USD 0.09%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Buy & Hold Return",
-         "values":{
-            "all":"439006.19 USD 43.90%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Sharpe Ratio",
-         "values":{
-            "all":"−27.483"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Sortino Ratio",
-         "values":{
-            "all":"−0.999"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Profit Factor",
-         "values":{
-            "all":"0.917"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Max Contracts Held",
-         "values":{
-            "all":"3"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Open PL",
-         "values":{
-            "all":"0 USD 0.00%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Commission Paid",
-         "values":{
-            "all":"0 USD"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Total Closed Trades",
-         "values":{
-            "all":"1226"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Total Open Trades",
-         "values":{
-            "all":"0"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Number Winning Trades",
-         "values":{
-            "all":"573"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Number Losing Trades",
-         "values":{
-            "all":"594"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Percent Profitable",
-         "values":{
-            "all":"46.74%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Avg Trade",
-         "values":{
-            "all":"−0.37 USD −0.01%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Avg Winning Trade",
-         "values":{
-            "all":"8.71 USD 0.21%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Avg Losing Trade",
-         "values":{
-            "all":"9.16 USD 0.22%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Ratio Avg Win / Avg Loss",
-         "values":{
-            "all":"0.95"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Largest Winning Trade",
-         "values":{
-            "all":"56.63 USD 1.31%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Largest Losing Trade",
-         "values":{
-            "all":"85.07 USD 2.41%"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Avg Bars in Trades",
-         "values":{
-            "all":"2"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Avg Bars in Winning Trades",
-         "values":{
-            "all":"2"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Avg Bars in Losing Trades",
-         "values":{
-            "all":"2"
-         }
-      },
-      {
-         "type":"table",
-         "label":"Margin Calls",
-         "values":{
-            "all":"0"
-         }
-      }
-   ]
-]
+ * @typedef {Object} eachCellType
+ * @property {"input"|"table"} type - The type of the cell, either input or table
+ * @property {string} label - The label of the cell
+ * @property {string} value - The value of the cell (for input type)
+ * @property {Object} [values] - The values of the cell (for table type)
+ *
+ * @typedef {eachCellType[]} eachRowType
+ * @typedef {eachRowType[]} gatherDataType
+ *
+ * @example
+ * [
+ *   [
+ *     { type: "input", label: "Tp", value: "41" },
+ *     { type: "input", label: "Sl", value: "13" },
+ *     { type: "input", label: "Max Intraday Filled Orders", value: "7" },
+ *     { type: "table", label: "Title", values: { all: "All" } },
+ *     { type: "table", label: "Net Profit", values: { all: "−453.68 USD −0.05%" } },
+ *     // ... more cells
+ *   ],
+ *   // ... more rows
+ * ]
  */
 const gatherData = () => {
   let gatherData = [];
@@ -428,6 +222,7 @@ const clickTVDialogOkButton = () => {
     console.error("Ok button not found");
   }
 };
+
 async function collectingAction() {
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
@@ -461,6 +256,20 @@ async function collectingAction() {
 }
 
 function getInputs() {
+  // strategy tab click
+  const strategyTab = document.getElementById("id_report-tabs_tablist");
+
+  if (strategyTab) {
+    const summaryTab = strategyTab.querySelector("#Performance\\ Summary");
+    if (summaryTab) {
+      summaryTab.click();
+    } else {
+      console.error("Summary tab not found");
+    }
+  } else {
+    console.error("Strategy tab list not found");
+  }
+
   let inputs = [];
 
   const inputDialog = document.querySelector(".content-tBgV1m0B");
@@ -527,7 +336,7 @@ function getInputs() {
 }
 
 // button getValues
-// data = {targetLabel: "Label", start:10, end: 10}
+// data = {targetLabel: "Label", start:10, end: 10, offset: 1}
 async function collectAndGenerateCSV(data) {
   const inputDialog = document.querySelector(".content-tBgV1m0B");
   const targetLabel = data.targetLabel;
@@ -613,6 +422,42 @@ function generateCombinations(arr) {
   return results;
 }
 
+/**
+ * Generate combinations with a given offset.
+ * @param {Array<{start: number, end: number, offset: number}>} arr - Array of ranges with start, end, and offset values.
+ * @returns {Array<number[]>} - All possible combinations.
+ */
+function generateOffsetCombinations(arr) {
+  const results = [];
+
+  function helper(prefix, index) {
+    if (index === arr.length) {
+      results.push(prefix);
+      return;
+    }
+
+    const range = arr[index];
+    for (
+      let i = range.start;
+      i <= range.end - range.offset;
+      i += range.offset
+    ) {
+      helper(prefix.concat(i), index + 1);
+    }
+
+    // Handle the case where the range does not perfectly divide by the offset
+    if ((range.end - range.start) % range.offset !== 0) {
+      const lastValue = range.end - ((range.end - range.start) % range.offset);
+      if (lastValue > range.start && lastValue < range.end) {
+        helper(prefix.concat(lastValue), index + 1);
+      }
+    }
+  }
+
+  helper([], 0);
+
+  return results;
+}
 async function adjustValue(input, targetValue, increaseButton, decreaseButton) {
   return new Promise((resolve) => {
     const interval = setInterval(() => {
@@ -633,7 +478,8 @@ async function adjustValue(input, targetValue, increaseButton, decreaseButton) {
 // get multiple values handle
 async function multipleCollectAndGenerateCSV(inputs) {
   const inputLabels = inputs.map((input) => input.label);
-  const combinations = generateCombinations(inputs);
+
+  const combinations = generateOffsetCombinations(inputs);
 
   let collectData = [];
 

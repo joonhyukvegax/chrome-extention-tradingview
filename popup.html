@@ -4,7 +4,7 @@
     <title>Popup</title>
     <style>
       body {
-        width: 320px;
+        width: 480px;
         border-radius: 8px;
         padding: 4px;
       }
@@ -20,6 +20,13 @@
         align-items: center;
         margin: 0 auto;
       }
+      .title{
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        color: #1479ed;
+      }
       .flex-container {
         display: flex;
         gap: 12px;
@@ -27,16 +34,15 @@
         align-items: center;
       }
       .container {
-        width: 400px;
-        min-width: 200px;
-        min-height: 100px;
+        width: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        
+        gap: 8px;
+        margin-bottom: 12px;
       }
       .action-button{
-          margin: 4px 8px;
+          padding: 4px 8px;
           font-size: 12px;
           background-color: white;
           border: 1px solid #1479ed;
@@ -46,19 +52,32 @@
             color: white;
           }
         }
+      .big-button{
+        font-size: 14px;
+        font-weight: bold;
+      }
       .input-container {
         display: flex;
         flex-direction: column;
         gap: 5px;
+        max-height: 400px;
+        overflow-y: auto;
       }
       .input-flex-container {
+        width: 100%;
         display: flex;
         gap: 5px;
-        justify-content: center;
+        /* justify-content: center; */
+        align-items: center;
+      }
+      .label-wrapper{
+        display: flex;
         align-items: center;
       }
       .input-number-wrapper{
-        justify-content: center;
+        width: 100%;
+        display: flex;
+        align-items: center;
         gap: 4px;
       }
       .range-input{
@@ -68,14 +87,18 @@
         width: 10px;
         
       }
+      .offset-input{
+        width: 32px;
+      }
     </style>
   </head>
   <body>
-    <section id="sectionContainer">
-    <div id="container">
-      <button class="action-button" id="collectingAction">collectingAction</button>
-      <button class="action-button" id="getInput">Get Inputs</button>
-      <button class="action-button" id="getMultipleValues">Get Multiple Values</button>
+    <section class="sectionContainer">
+      <h1 class="title">TV Parameter Searcher</h1>
+    <div class="container">
+      <button class="action-button big-button" id="getInput">Strategy Inputs</button>
+      <button class="action-button big-button" id="collectingAction">Current Summary</button>
+      <button class="action-button big-button" id="getMultipleValues">Multiple Inputs</button>
     </div>
     <div id="inputValues" class="input-container"></div>
     <script src="popup.js"></script>
