@@ -346,8 +346,9 @@ function getInputs() {
 }
 
 /**
+ * @deprecated
  * button Name : current summary
- * @param {*} data - {targetLabel: "Label", start:10, end: 10, offset: 1}
+ * @param {*} data - {targetLabel: "Label", start: 10, end: 10, offset: 2}
  * @returns
  */
 async function collectAndGenerateCSV(data) {
@@ -384,6 +385,7 @@ async function collectAndGenerateCSV(data) {
             const decreaseButton = buttons[1];
 
             const end = data.end;
+            const offset = data.offset;
             let current = parseInt(input.value);
 
             let collectData = [];
@@ -392,22 +394,34 @@ async function collectAndGenerateCSV(data) {
 
             const interval = setInterval(async () => {
               if (current < end) {
-                increaseButton.click();
-                current++;
-                await delay(500);
+                for (let j = 0; j < offset; j++) {
+                  increaseButton.click();
+                  await delay(500); // Delay between each button click
+                }
+                current += offset;
                 const increaseInput = gatherData();
                 collectData.push(...increaseInput);
+                if (current >= end) {
+                  clearInterval(interval);
+                  downloadCSV(collectData);
+                }
               } else if (current > end) {
-                decreaseButton.click();
-                current--;
-                await delay(500);
+                for (let j = 0; j < offset; j++) {
+                  decreaseButton.click();
+                  await delay(500); // Delay between each button click
+                }
+                current -= offset;
                 const decreaseInput = gatherData();
                 collectData.push(...decreaseInput);
+                if (current <= end) {
+                  clearInterval(interval);
+                  downloadCSV(collectData);
+                }
               } else {
                 clearInterval(interval);
                 downloadCSV(collectData);
               }
-            }, 1000);
+            }, 1000); // Delay between each interval run
           } else {
             alert("Increase and Decrease buttons not found");
           }
@@ -574,10 +588,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const inputs = getInputs();
     sendResponse({ data: inputs });
   }
-  if (request.action === "collectAndGenerateCSV") {
-    collectAndGenerateCSV(request.data);
-    sendResponse({ result: "Input updated" });
-  }
+  // if (request.action === "collectAndGenerateCSV") {
+  //   collectAndGenerateCSV(request.data);
+  //   sendResponse({ result: "Input updated" });
+  // }
   if (request.action === "getMultipleValues") {
     multipleCollectAndGenerateCSV(request.data);
     sendResponse({ result: "getMultipleValues" });

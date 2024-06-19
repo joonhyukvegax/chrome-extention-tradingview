@@ -162,47 +162,47 @@ function displayInputValues(data) {
         rowContainer.appendChild(inputWrapper);
         inputValuesContainer.appendChild(rowContainer);
 
-        // 버튼 추가
-        let button = document.createElement("button");
-        button.className = "action-button";
-        button.textContent = `Get ${item.label} Range`;
-        rowContainer.appendChild(button);
+        // // 버튼 추가
+        // let button = document.createElement("button");
+        // button.className = "action-button";
+        // button.textContent = `Get ${item.label} Range`;
+        // rowContainer.appendChild(button);
 
-        button.addEventListener("click", () => {
-          const start = parseInt(input.value);
-          const end = parseInt(targetInput.value);
-          const offset = parseInt(offsetInput.value);
+        // button.addEventListener("click", () => {
+        //   const start = parseInt(input.value);
+        //   const end = parseInt(targetInput.value);
+        //   const offset = parseInt(offsetInput.value);
 
-          if (isNaN(start) || isNaN(end)) {
-            alert("Please enter valid numbers");
-            return;
-          }
+        //   if (isNaN(start) || isNaN(end)) {
+        //     alert("Please enter valid numbers");
+        //     return;
+        //   }
 
-          const automationArr = {
-            targetLabel: item.label,
-            start,
-            end,
-            offset,
-          };
+        //   const automationArr = {
+        //     targetLabel: item.label,
+        //     start,
+        //     end,
+        //     offset,
+        //   };
 
-          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs.length === 0) {
-              console.error("No active tabs found");
-              return;
-            }
-            chrome.tabs.sendMessage(
-              tabs[0].id,
-              { action: "collectAndGenerateCSV", data: automationArr },
-              (response) => {
-                if (chrome.runtime.lastError) {
-                  console.error(chrome.runtime.lastError);
-                } else {
-                  console.log(response.result);
-                }
-              }
-            );
-          });
-        });
+        //   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        //     if (tabs.length === 0) {
+        //       console.error("No active tabs found");
+        //       return;
+        //     }
+        //     chrome.tabs.sendMessage(
+        //       tabs[0].id,
+        //       { action: "collectAndGenerateCSV", data: automationArr },
+        //       (response) => {
+        //         if (chrome.runtime.lastError) {
+        //           console.error(chrome.runtime.lastError);
+        //         } else {
+        //           console.log(response.result);
+        //         }
+        //       }
+        //     );
+        //   });
+        // });
 
         break;
       case "select":
