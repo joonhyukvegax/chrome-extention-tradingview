@@ -178,6 +178,9 @@ const downloadCSV = (collectedData) => {
   document.body.removeChild(tableLink);
 };
 
+/**
+ * Download the Excel file from the TV strategy tester
+ */
 const downloadTVExell = () => {
   const strategyGroup = document.querySelector(".fixedContent-zf0MHBzY");
   if (strategyGroup) {
@@ -207,6 +210,9 @@ const triggerClick = (element) => {
   }
 };
 
+/**
+ * Clicks the "OK" button in the TV dialog
+ */
 const clickTVDialogOkButton = () => {
   const footerElement = document.querySelector(".footer-PhMf7PhQ");
   const okButton = footerElement.querySelector(".button-D4RPB3ZC");
@@ -250,11 +256,15 @@ async function collectingAction() {
 
   const gatereData = gatherData();
 
-  downloadTVExell();
+  // downloadTVExell();
 
   downloadCSV(gatereData);
 }
 
+/**
+ * button Name : strategy Inputs
+ * @returns {Array<{label: string, value: string, type: "checkbox"|"number"|"select", options?: string[]}>} - Array of objects containing the input data
+ */
 function getInputs() {
   // strategy tab click
   const strategyTab = document.getElementById("id_report-tabs_tablist");
@@ -335,8 +345,11 @@ function getInputs() {
   return inputs;
 }
 
-// button getValues
-// data = {targetLabel: "Label", start:10, end: 10, offset: 1}
+/**
+ * button Name : current summary
+ * @param {*} data - {targetLabel: "Label", start:10, end: 10, offset: 1}
+ * @returns
+ */
 async function collectAndGenerateCSV(data) {
   const inputDialog = document.querySelector(".content-tBgV1m0B");
   const targetLabel = data.targetLabel;
@@ -437,24 +450,23 @@ function generateOffsetCombinations(arr) {
     }
 
     const range = arr[index];
-    for (
-      let i = range.start;
-      i <= range.end - range.offset;
-      i += range.offset
-    ) {
-      helper(prefix.concat(i), index + 1);
-    }
-
-    // Handle the case where the range does not perfectly divide by the offset
-    if ((range.end - range.start) % range.offset !== 0) {
-      const lastValue = range.end - ((range.end - range.start) % range.offset);
-      if (lastValue > range.start && lastValue < range.end) {
-        helper(prefix.concat(lastValue), index + 1);
+    if (range.start <= range.end) {
+      for (let i = range.start; i <= range.end; i += range.offset) {
+        helper(prefix.concat(i), index + 1);
+      }
+    } else {
+      for (let i = range.start; i >= range.end; i -= range.offset) {
+        helper(prefix.concat(i), index + 1);
       }
     }
   }
 
   helper([], 0);
+  alert(
+    `generateOffsetCombinations : ${JSON.stringify(results)}, ${JSON.stringify(
+      arr
+    )}`
+  );
 
   return results;
 }
@@ -567,7 +579,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ result: "Input updated" });
   }
   if (request.action === "getMultipleValues") {
-    // alert(`${"getMultipleValues"}, ${JSON.stringify(request.data)}`);
     multipleCollectAndGenerateCSV(request.data);
     sendResponse({ result: "getMultipleValues" });
   }

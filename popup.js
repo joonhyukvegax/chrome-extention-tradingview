@@ -8,6 +8,7 @@ document.getElementById("getMultipleValues").addEventListener("click", () => {
       console.error("No active tabs found");
       return;
     }
+
     chrome.tabs.sendMessage(
       tabs[0].id,
       { action: "getMultipleValues", data: dialogRangeInputs },
@@ -60,7 +61,6 @@ document.getElementById("getInput").addEventListener("click", () => {
   });
 });
 
-// 입력 값을 표시하는 함수
 function displayInputValues(data) {
   collectedData = data; // 수집된 데이터를 저장
   const inputValuesContainer = document.getElementById("inputValues");
@@ -94,12 +94,31 @@ function displayInputValues(data) {
         input.className = "range-input";
         input.addEventListener("input", (event) => {
           item.value = event.target.value;
+          if (multiple_checkbox.checked) {
+            updateDialogRangeInputs(
+              item.label,
+              input.value,
+              targetInput.value,
+              offsetInput.value
+            );
+          }
         });
 
         const targetInput = document.createElement("input");
         targetInput.type = "text";
         targetInput.value = item.value;
-        input.className = "range-input";
+        targetInput.className = "range-input";
+        targetInput.addEventListener("input", (event) => {
+          item.value = event.target.value;
+          if (multiple_checkbox.checked) {
+            updateDialogRangeInputs(
+              item.label,
+              input.value,
+              targetInput.value,
+              offsetInput.value
+            );
+          }
+        });
 
         const span = document.createElement("span");
         span.textContent = " - ";
@@ -107,18 +126,25 @@ function displayInputValues(data) {
         const offsetInput = document.createElement("input");
         offsetInput.placeholder = "offset";
         offsetInput.className = "offset-input";
+        offsetInput.addEventListener("input", (event) => {
+          if (multiple_checkbox.checked) {
+            updateDialogRangeInputs(
+              item.label,
+              input.value,
+              targetInput.value,
+              offsetInput.value
+            );
+          }
+        });
 
         multiple_checkbox.onchange = function () {
           if (this.checked) {
-            const start = input.value;
-            const end = targetInput.value;
-            const offset = offsetInput.value ? offsetInput.value : 1;
-            dialogRangeInputs.push({
-              label: item.label,
-              start: parseInt(start),
-              end: parseInt(end),
-              offset: parseInt(offset),
-            });
+            updateDialogRangeInputs(
+              item.label,
+              input.value,
+              targetInput.value,
+              offsetInput.value
+            );
           } else {
             dialogRangeInputs = dialogRangeInputs.filter(
               (input) => input.label !== item.label
@@ -132,64 +158,50 @@ function displayInputValues(data) {
         inputWrapper.appendChild(input);
         inputWrapper.appendChild(span);
         inputWrapper.appendChild(targetInput);
-
         inputWrapper.appendChild(offsetInput);
-
-        // div.appendChild(label);
         rowContainer.appendChild(inputWrapper);
-
         inputValuesContainer.appendChild(rowContainer);
 
-        targetInput.addEventListener("input", (event) => {
-          item.value = event.target.value;
+        // 버튼 추가
+        let button = document.createElement("button");
+        button.className = "action-button";
+        button.textContent = `Get ${item.label} Range`;
+        rowContainer.appendChild(button);
 
-          // 버튼 추가
-          let button = rowContainer.querySelector("button");
-          if (!button) {
-            button = document.createElement("button");
-            button.className = "action-button";
-            button.textContent = `Get ${item.label} Range`;
-            rowContainer.appendChild(button);
+        button.addEventListener("click", () => {
+          const start = parseInt(input.value);
+          const end = parseInt(targetInput.value);
+          const offset = parseInt(offsetInput.value);
 
-            button.addEventListener("click", () => {
-              const start = parseInt(input.value);
-              const end = parseInt(targetInput.value);
-              const offset = parseInt(offsetInput.value);
-
-              if (isNaN(start) || isNaN(end)) {
-                alert("Please enter valid numbers");
-                return;
-              }
-
-              const automationArr = {
-                targetLabel: item.label,
-                start,
-                end,
-                offset,
-              };
-
-              chrome.tabs.query(
-                { active: true, currentWindow: true },
-                (tabs) => {
-                  if (tabs.length === 0) {
-                    console.error("No active tabs found");
-                    return;
-                  }
-                  chrome.tabs.sendMessage(
-                    tabs[0].id,
-                    { action: "collectAndGenerateCSV", data: automationArr },
-                    (response) => {
-                      if (chrome.runtime.lastError) {
-                        console.error(chrome.runtime.lastError);
-                      } else {
-                        console.log(response.result);
-                      }
-                    }
-                  );
-                }
-              );
-            });
+          if (isNaN(start) || isNaN(end)) {
+            alert("Please enter valid numbers");
+            return;
           }
+
+          const automationArr = {
+            targetLabel: item.label,
+            start,
+            end,
+            offset,
+          };
+
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs.length === 0) {
+              console.error("No active tabs found");
+              return;
+            }
+            chrome.tabs.sendMessage(
+              tabs[0].id,
+              { action: "collectAndGenerateCSV", data: automationArr },
+              (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error(chrome.runtime.lastError);
+                } else {
+                  console.log(response.result);
+                }
+              }
+            );
+          });
         });
 
         break;
@@ -224,4 +236,23 @@ function displayInputValues(data) {
         break;
     }
   });
+}
+
+function updateDialogRangeInputs(label, start, end, offset) {
+  if (isNaN(parseInt(start)) || isNaN(parseInt(end))) {
+    return;
+  }
+  const index = dialogRangeInputs.findIndex((input) => input.label === label);
+  if (index !== -1) {
+    dialogRangeInputs[index].start = parseInt(start);
+    dialogRangeInputs[index].end = parseInt(end);
+    dialogRangeInputs[index].offset = offset ? parseInt(offset) : 1;
+  } else {
+    dialogRangeInputs.push({
+      label: label,
+      start: parseInt(start),
+      end: parseInt(end),
+      offset: offset ? parseInt(offset) : 1,
+    });
+  }
 }
