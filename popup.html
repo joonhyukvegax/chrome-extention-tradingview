@@ -90,6 +90,12 @@
       .offset-input{
         width: 32px;
       }
+      .flex-center{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
     </style>
   </head>
   <body>
@@ -99,6 +105,11 @@
       <button class="action-button big-button" id="getInput">Strategy Inputs</button>
       <button class="action-button big-button" id="collectingAction">Current Summary</button>
       <button class="action-button big-button" id="getMultipleValues">Multiple Inputs</button>
+      <div class="flex-center">
+        <label for="random">random pick</label>
+        <input type="checkbox" name="random" id="random"></input>
+        <input type="number" id="randomCount" class="random-input" placeholder="Count" disabled>
+      </div>
     </div>
     <div id="inputValues" class="input-container"></div>
     <script src="popup.js"></script>

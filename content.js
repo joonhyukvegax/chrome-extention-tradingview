@@ -413,6 +413,7 @@ async function collectAndGenerateCSV(data) {
                 current -= offset;
                 const decreaseInput = gatherData();
                 collectData.push(...decreaseInput);
+
                 if (current <= end) {
                   clearInterval(interval);
                   downloadCSV(collectData);
@@ -476,11 +477,6 @@ function generateOffsetCombinations(arr) {
   }
 
   helper([], 0);
-  alert(
-    `generateOffsetCombinations : ${JSON.stringify(results)}, ${JSON.stringify(
-      arr
-    )}`
-  );
 
   return results;
 }
@@ -497,15 +493,20 @@ async function adjustValue(input, targetValue, increaseButton, decreaseButton) {
         clearInterval(interval);
         resolve();
       }
-    }, 100);
+    }, 200);
   });
 }
 
 // get multiple values handle
-async function multipleCollectAndGenerateCSV(inputs) {
+async function multipleCollectAndGenerateCSV(inputs, randomCount = null) {
   const inputLabels = inputs.map((input) => input.label);
 
-  const combinations = generateOffsetCombinations(inputs);
+  let combinations = generateOffsetCombinations(inputs);
+  // 랜덤 갯수만큼 조합을 선택
+  if (randomCount && randomCount > 0) {
+    combinations = fisherYatesShuffle(combinations).slice(0, randomCount);
+  }
+  alert(`Total combinations: ${JSON.stringify(combinations)}`);
 
   let collectData = [];
 
@@ -571,7 +572,7 @@ async function multipleCollectAndGenerateCSV(inputs) {
     }
 
     // wait table loading
-    await delay(1500);
+    await delay(2500);
 
     const currentData = gatherData();
     collectData.push(...currentData);
@@ -580,20 +581,28 @@ async function multipleCollectAndGenerateCSV(inputs) {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "collectingAction") {
-    collectingAction();
-    sendResponse({ result: "Action completed" });
-  }
-  if (request.action === "getInputs") {
-    const inputs = getInputs();
-    sendResponse({ data: inputs });
-  }
-  // if (request.action === "collectAndGenerateCSV") {
-  //   collectAndGenerateCSV(request.data);
-  //   sendResponse({ result: "Input updated" });
-  // }
-  if (request.action === "getMultipleValues") {
-    multipleCollectAndGenerateCSV(request.data);
-    sendResponse({ result: "getMultipleValues" });
+  switch (request.action) {
+    case "collectingAction":
+      collectingAction();
+      sendResponse({ result: "Action completed" });
+      break;
+    case "getInputs":
+      const inputs = getInputs();
+      sendResponse({ data: inputs });
+      break;
+    case "getMultipleValues":
+      multipleCollectAndGenerateCSV(request.data, request.randomCount);
+      sendResponse({ result: "getMultipleValues" });
+      break;
+    default:
+      console.error("Unknown action");
   }
 });
+
+function fisherYatesShuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
