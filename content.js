@@ -10,6 +10,43 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
 };
 
+async function waitForSpinner(timeout = 5000) {
+  return new Promise((resolve) => {
+    const spinnerSelector = ".tv-spinner--shown";
+    let spinner = document.querySelector(spinnerSelector);
+
+    if (!spinner) {
+      return resolve();
+    }
+
+    const observer = new MutationObserver(() => {
+      spinner = document.querySelector(spinnerSelector);
+      if (!spinner) {
+        observer.disconnect();
+        clearInterval(intervalId);
+        resolve();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    const intervalId = setInterval(() => {
+      spinner = document.querySelector(spinnerSelector);
+      if (!spinner) {
+        clearInterval(intervalId);
+        observer.disconnect();
+        resolve();
+      }
+    }, 1);
+
+    setTimeout(() => {
+      clearInterval(intervalId);
+      observer.disconnect();
+      resolve();
+    }, timeout);
+  });
+}
+
 /**
  * Gather data from TV strategy Performance Summary table
  * @returns {gatherDataType} - Array of objects containing the data
@@ -345,93 +382,6 @@ function getInputs() {
   return inputs;
 }
 
-/**
- * @deprecated
- * button Name : current summary
- * @param {*} data - {targetLabel: "Label", start: 10, end: 10, offset: 2}
- * @returns
- */
-async function collectAndGenerateCSV(data) {
-  const inputDialog = document.querySelector(".content-tBgV1m0B");
-  const targetLabel = data.targetLabel;
-
-  if (!inputDialog) {
-    return alert("open Inputs Dialog");
-  }
-
-  const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
-
-  for (let i = 0; i < cells.length; i++) {
-    const cell = cells[i];
-    const labelElem = cell.classList.contains("first-tBgV1m0B");
-    const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
-
-    if (labelElem && labelInnerElem.innerText.trim() === targetLabel) {
-      const nextCell = cells[i + 1];
-
-      if (nextCell) {
-        const input = nextCell.querySelector("input");
-
-        if (input) {
-          input.focus();
-          input.select();
-
-          const buttons = nextCell
-            .querySelector(".controlWrapper-DBTazUk2")
-            .querySelectorAll("button");
-
-          if (buttons.length > 0) {
-            const increaseButton = buttons[0];
-            const decreaseButton = buttons[1];
-
-            const end = data.end;
-            const offset = data.offset;
-            let current = parseInt(input.value);
-
-            let collectData = [];
-            const currentData = gatherData();
-            collectData.push(...currentData);
-
-            const interval = setInterval(async () => {
-              if (current < end) {
-                for (let j = 0; j < offset; j++) {
-                  increaseButton.click();
-                  await delay(500); // Delay between each button click
-                }
-                current += offset;
-                const increaseInput = gatherData();
-                collectData.push(...increaseInput);
-                if (current >= end) {
-                  clearInterval(interval);
-                  downloadCSV(collectData);
-                }
-              } else if (current > end) {
-                for (let j = 0; j < offset; j++) {
-                  decreaseButton.click();
-                  await delay(500); // Delay between each button click
-                }
-                current -= offset;
-                const decreaseInput = gatherData();
-                collectData.push(...decreaseInput);
-
-                if (current <= end) {
-                  clearInterval(interval);
-                  downloadCSV(collectData);
-                }
-              } else {
-                clearInterval(interval);
-                downloadCSV(collectData);
-              }
-            }, 1000); // Delay between each interval run
-          } else {
-            alert("Increase and Decrease buttons not found");
-          }
-        }
-      }
-      break;
-    }
-  }
-}
 function generateCombinations(arr) {
   const results = [];
 
@@ -571,8 +521,7 @@ async function multipleCollectAndGenerateCSV(inputs, randomCount = null) {
       }
     }
 
-    // wait table loading
-    await delay(2500);
+    await waitForSpinner(1000);
 
     const currentData = gatherData();
     collectData.push(...currentData);
