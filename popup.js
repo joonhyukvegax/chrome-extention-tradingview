@@ -64,7 +64,10 @@ document.addEventListener("DOMContentLoaded", () => {
         { action: "getInputs" },
         (response) => {
           if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError);
+            console.error(
+              "getInputs: ",
+              JSON.stringify(chrome.runtime.lastError)
+            );
           } else {
             displayInputValues(response.data);
           }
@@ -73,6 +76,29 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  /**
+   *
+   * @param {*} data  {label: "Length", type: "number", value: "175",stepValue: float }
+   *   [
+    { "label": "Length", "value": "6", "type": "number", "stepValue": 1 },
+    { "label": "Multiplier", "value": "1", "type": "number", "stepValue": 1 },
+    {
+      "label": "Source",
+      "value": "close",
+      "type": "select",
+      "options": ["close"]
+    },
+    { "label": "Use Exponential MA", "value": "on", "type": "checkbox" },
+    {
+      "label": "Bands Style",
+      "value": "Average True Range",
+      "type": "select",
+      "options": ["Average True Range"]
+    },
+    { "label": "ATR Length", "value": "10", "type": "number", "stepValue": 1 }
+  ]
+  
+   */
   function displayInputValues(data) {
     collectedData = data; // 수집된 데이터를 저장
     const inputValuesContainer = document.getElementById("inputValues");
@@ -136,6 +162,14 @@ document.addEventListener("DOMContentLoaded", () => {
           span.textContent = " - ";
 
           const offsetInput = document.createElement("input");
+          const stepValueTxt = document.createElement("span");
+
+          if (item.stepValue) {
+            offsetInput.value = item.stepValue;
+            stepValueTxt.textContent = `stepValue: ${item.stepValue}`;
+            offsetInput.append(stepValueTxt);
+          }
+
           offsetInput.placeholder = "offset";
           offsetInput.className = "offset-input";
           offsetInput.addEventListener("input", (event) => {
@@ -171,6 +205,8 @@ document.addEventListener("DOMContentLoaded", () => {
           inputWrapper.appendChild(span);
           inputWrapper.appendChild(targetInput);
           inputWrapper.appendChild(offsetInput);
+          inputWrapper.appendChild(stepValueTxt);
+
           rowContainer.appendChild(inputWrapper);
           inputValuesContainer.appendChild(rowContainer);
           break;

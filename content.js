@@ -1,3 +1,11 @@
+function fisherYatesShuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const formatDate = (date) => {
@@ -10,6 +18,7 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}:${hours}:${minutes}:${seconds}`;
 };
 
+// 아직 작동하지 않음
 async function waitForSpinner(timeout = 5000) {
   return new Promise((resolve) => {
     const spinnerSelector = ".tv-spinner--shown";
@@ -302,7 +311,7 @@ async function collectingAction() {
  * button Name : strategy Inputs
  * @returns {Array<{label: string, value: string, type: "checkbox"|"number"|"select", options?: string[]}>} - Array of objects containing the input data
  */
-function getInputs() {
+async function getInputs() {
   // strategy tab click
   const strategyTab = document.getElementById("id_report-tabs_tablist");
 
@@ -361,6 +370,23 @@ function getInputs() {
           const input = nextCell.querySelector("input");
           const button = nextCell.querySelector('span[role="button"]');
           if (input) {
+            input.focus();
+            input.select();
+
+            const buttons = nextCell
+              .querySelector(".controlWrapper-DBTazUk2")
+              .querySelectorAll("button");
+
+            if (buttons.length > 0) {
+              const increaseButton = buttons[0];
+              const decreaseButton = buttons[1];
+              const stepValue = await getInputStep(
+                input,
+                increaseButton,
+                decreaseButton
+              );
+              obj.stepValue = stepValue;
+            }
             obj.value = input.value;
           } else if (button) {
             const buttonTextElem = button.querySelector(
@@ -529,6 +555,49 @@ async function multipleCollectAndGenerateCSV(inputs, randomCount = null) {
   downloadCSV(collectData);
 }
 
+async function calculateStepValue(input, increaseButton, decreaseButton) {
+  return new Promise((resolve) => {
+    const factor = 100000000; // 10^8
+    let initialValue = parseFloat(input.value);
+
+    // Click the increase button once and calculate the step value
+    increaseButton.click();
+    setTimeout(() => {
+      let increasedValue = parseFloat(input.value);
+
+      // Reset to initial value by clicking the decrease button
+      decreaseButton.click();
+      setTimeout(() => {
+        let decreasedValue = parseFloat(input.value);
+        console.error(
+          "stepValue = increasedValue - initialValue;",
+          increasedValue,
+          initialValue
+        );
+        let stepValue =
+          (increasedValue * factor - initialValue * factor) / factor;
+
+        // Ensure it resets to the initial value
+        if (decreasedValue !== initialValue) {
+          alert("Value did not reset correctly, check the implementation.");
+        }
+
+        resolve(stepValue);
+      }, 200);
+    }, 200);
+  });
+}
+
+async function getInputStep(input, increaseButton, decreaseButton) {
+  const stepValue = await calculateStepValue(
+    input,
+    increaseButton,
+    decreaseButton
+  );
+
+  return stepValue;
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case "collectingAction":
@@ -536,22 +605,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ result: "Action completed" });
       break;
     case "getInputs":
-      const inputs = getInputs();
-      sendResponse({ data: inputs });
-      break;
+      (async () => {
+        const inputs = await getInputs();
+        sendResponse({ data: inputs });
+      })();
+      return true;
     case "getMultipleValues":
       multipleCollectAndGenerateCSV(request.data, request.randomCount);
       sendResponse({ result: "getMultipleValues" });
       break;
+    case "getStepValues": {
+    }
     default:
       console.error("Unknown action");
   }
 });
-
-function fisherYatesShuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
