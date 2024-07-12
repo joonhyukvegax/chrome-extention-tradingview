@@ -97,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     { "label": "ATR Length", "value": "10", "type": "number", "stepValue": 1 }
   ]
-  
    */
   function displayInputValues(data) {
     collectedData = data; // 수집된 데이터를 저장
@@ -137,7 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value
+                offsetInput.value,
+                item.stepValue
               );
             }
           });
@@ -153,7 +153,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value
+                offsetInput.value,
+                item.stepValue
               );
             }
           });
@@ -167,7 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (item.stepValue) {
             offsetInput.value = item.stepValue;
             stepValueTxt.textContent = `stepValue: ${item.stepValue}`;
-            offsetInput.append(stepValueTxt);
           }
 
           offsetInput.placeholder = "offset";
@@ -178,7 +178,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value
+                offsetInput.value,
+                item.stepValue
               );
             }
           });
@@ -189,7 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value
+                offsetInput.value,
+                item.stepValue
               );
             } else {
               dialogRangeInputs = dialogRangeInputs.filter(
@@ -243,21 +245,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function updateDialogRangeInputs(label, start, end, offset) {
-    if (isNaN(parseInt(start)) || isNaN(parseInt(end))) {
+  function updateDialogRangeInputs(label, start, end, offset, stepValue) {
+    if (isNaN(parseFloat(start)) || isNaN(parseFloat(end))) {
       return;
     }
     const index = dialogRangeInputs.findIndex((input) => input.label === label);
     if (index !== -1) {
-      dialogRangeInputs[index].start = parseInt(start);
-      dialogRangeInputs[index].end = parseInt(end);
-      dialogRangeInputs[index].offset = offset ? parseInt(offset) : 1;
+      dialogRangeInputs[index].start = parseFloat(start);
+      dialogRangeInputs[index].end = parseFloat(end);
+      dialogRangeInputs[index].offset = offset ? parseFloat(offset) : 1;
+      dialogRangeInputs[index].stepValue = stepValue;
     } else {
       dialogRangeInputs.push({
         label: label,
-        start: parseInt(start),
-        end: parseInt(end),
-        offset: offset ? parseInt(offset) : 1,
+        start: parseFloat(start),
+        end: parseFloat(end),
+        offset: offset ? parseFloat(offset) : 1,
+        stepValue: stepValue,
       });
     }
   }

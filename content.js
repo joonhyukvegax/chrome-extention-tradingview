@@ -434,6 +434,9 @@ function generateCombinations(arr) {
 function generateOffsetCombinations(arr) {
   const results = [];
 
+  // combination annotation
+  // alert(JSON.stringify(arr));
+
   function helper(prefix, index) {
     if (index === arr.length) {
       results.push(prefix);
@@ -441,13 +444,23 @@ function generateOffsetCombinations(arr) {
     }
 
     const range = arr[index];
-    if (range.start <= range.end) {
-      for (let i = range.start; i <= range.end; i += range.offset) {
-        helper(prefix.concat(i), index + 1);
+
+    const stepMultiplier = Math.pow(
+      10,
+      range.stepValue.toString().split(".")[1]?.length || 0
+    ); // stepValue 소수점 자릿수
+
+    const start = range.start * stepMultiplier;
+    const end = range.end * stepMultiplier;
+    const offset = range.offset * stepMultiplier;
+
+    if (start <= end) {
+      for (let i = start; i <= end; i += offset) {
+        helper(prefix.concat(i / stepMultiplier), index + 1); // 원래 값으로 복원
       }
     } else {
-      for (let i = range.start; i >= range.end; i -= range.offset) {
-        helper(prefix.concat(i), index + 1);
+      for (let i = start; i >= end; i -= offset) {
+        helper(prefix.concat(i / stepMultiplier), index + 1); // 원래 값으로 복원
       }
     }
   }
@@ -459,7 +472,7 @@ function generateOffsetCombinations(arr) {
 async function adjustValue(input, targetValue, increaseButton, decreaseButton) {
   return new Promise((resolve) => {
     const interval = setInterval(() => {
-      const curValue = parseInt(input.value);
+      const curValue = parseFloat(input.value);
 
       if (curValue > targetValue) {
         decreaseButton.click();
@@ -482,7 +495,6 @@ async function multipleCollectAndGenerateCSV(inputs, randomCount = null) {
   if (randomCount && randomCount > 0) {
     combinations = fisherYatesShuffle(combinations).slice(0, randomCount);
   }
-  alert(`Total combinations: ${JSON.stringify(combinations)}`);
 
   let collectData = [];
 
@@ -557,7 +569,6 @@ async function multipleCollectAndGenerateCSV(inputs, randomCount = null) {
 
 async function calculateStepValue(input, increaseButton, decreaseButton) {
   return new Promise((resolve) => {
-    const factor = 100000000; // 10^8
     let initialValue = parseFloat(input.value);
 
     // Click the increase button once and calculate the step value
@@ -569,13 +580,9 @@ async function calculateStepValue(input, increaseButton, decreaseButton) {
       decreaseButton.click();
       setTimeout(() => {
         let decreasedValue = parseFloat(input.value);
-        console.error(
-          "stepValue = increasedValue - initialValue;",
-          increasedValue,
-          initialValue
-        );
-        let stepValue =
-          (increasedValue * factor - initialValue * factor) / factor;
+
+        // Calculate step value
+        let stepValue = parseFloat((increasedValue - initialValue).toFixed(10));
 
         // Ensure it resets to the initial value
         if (decreasedValue !== initialValue) {
