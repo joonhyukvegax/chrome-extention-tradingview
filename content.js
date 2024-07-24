@@ -56,6 +56,22 @@ async function waitForSpinner(timeout = 5000) {
   });
 }
 
+// 로컬 스토리지에 데이터 저장
+function saveToLocalStorage(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+// 로컬 스토리지에서 데이터 복구
+function loadFromLocalStorage(key) {
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data) : null;
+}
+
+// 로컬 스토리지에서 데이터 삭제
+function removeFromLocalStorage(key) {
+  localStorage.removeItem(key);
+}
+
 /**
  * Gather data from TV strategy Performance Summary table
  * @returns {gatherDataType} - Array of objects containing the data
@@ -427,11 +443,11 @@ function generateCombinations(arr) {
 }
 
 /**
- * Generate combinations with a given offset.
- * @param {Array<{start: number, end: number, offset: number}>} arr - Array of ranges with start, end, and offset values.
+ * Generate combinations with a given step.
+ * @param {Array<{start: number, end: number, step: number}>} arr - Array of ranges with start, end, and step values.
  * @returns {Array<number[]>} - All possible combinations.
  */
-function generateOffsetCombinations(arr) {
+function generateStepCombinations(arr) {
   const results = [];
 
   // combination annotation
@@ -452,14 +468,14 @@ function generateOffsetCombinations(arr) {
 
     const start = range.start * stepMultiplier;
     const end = range.end * stepMultiplier;
-    const offset = range.offset * stepMultiplier;
+    const step = range.step * stepMultiplier;
 
     if (start <= end) {
-      for (let i = start; i <= end; i += offset) {
+      for (let i = start; i <= end; i += step) {
         helper(prefix.concat(i / stepMultiplier), index + 1); // 원래 값으로 복원
       }
     } else {
-      for (let i = start; i >= end; i -= offset) {
+      for (let i = start; i >= end; i -= step) {
         helper(prefix.concat(i / stepMultiplier), index + 1); // 원래 값으로 복원
       }
     }
@@ -494,11 +510,14 @@ async function multipleCollectAndGenerateCSV(
 ) {
   const inputLabels = inputs.map((input) => input.label);
 
-  let combinations = generateOffsetCombinations(inputs);
+  let combinations = generateStepCombinations(inputs);
   // 랜덤 갯수만큼 조합을 선택
   if (randomCount && randomCount > 0) {
     combinations = fisherYatesShuffle(combinations).slice(0, randomCount);
   }
+
+  let savedCombinations = loadFromLocalStorage("combinations") || [];
+  let savedData = loadFromLocalStorage("collectData") || [];
 
   let collectData = [];
 

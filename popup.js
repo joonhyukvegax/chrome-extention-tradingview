@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.error("delayTimeValue: ", delayTimeValue);
   });
 
-  // {"targetLabel":"Length","start":175,"end":177,offset:1} 데이터 수집
+  // {"targetLabel":"Length","start":175,"end":177,step:1} 데이터 수집
   getMultipleValuesButton.addEventListener("click", () => {
     const randomCount = randomCheckbox.checked
       ? parseInt(randomCountInput.value)
@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value,
+                stepInput.value,
                 item.stepValue
               );
             }
@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value,
+                stepInput.value,
                 item.stepValue
               );
             }
@@ -174,23 +174,23 @@ document.addEventListener("DOMContentLoaded", () => {
           const span = document.createElement("span");
           span.textContent = " - ";
 
-          const offsetInput = document.createElement("input");
+          const stepInput = document.createElement("input");
           const stepValueTxt = document.createElement("span");
 
           if (item.stepValue) {
-            offsetInput.value = item.stepValue;
+            stepInput.value = item.stepValue;
             stepValueTxt.textContent = `stepValue: ${item.stepValue}`;
           }
 
-          offsetInput.placeholder = "offset";
-          offsetInput.className = "offset-input";
-          offsetInput.addEventListener("input", (event) => {
+          stepInput.placeholder = "step";
+          stepInput.className = "step-input";
+          stepInput.addEventListener("input", (event) => {
             if (multiple_checkbox.checked) {
               updateDialogRangeInputs(
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value,
+                stepInput.value,
                 item.stepValue
               );
             }
@@ -202,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 item.label,
                 input.value,
                 targetInput.value,
-                offsetInput.value,
+                stepInput.value,
                 item.stepValue
               );
             } else {
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
           inputWrapper.appendChild(input);
           inputWrapper.appendChild(span);
           inputWrapper.appendChild(targetInput);
-          inputWrapper.appendChild(offsetInput);
+          inputWrapper.appendChild(stepInput);
           inputWrapper.appendChild(stepValueTxt);
 
           rowContainer.appendChild(inputWrapper);
@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function updateDialogRangeInputs(label, start, end, offset, stepValue) {
+  function updateDialogRangeInputs(label, start, end, step, stepValue) {
     if (isNaN(parseFloat(start)) || isNaN(parseFloat(end))) {
       return;
     }
@@ -265,14 +265,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (index !== -1) {
       dialogRangeInputs[index].start = parseFloat(start);
       dialogRangeInputs[index].end = parseFloat(end);
-      dialogRangeInputs[index].offset = offset ? parseFloat(offset) : 1;
+      dialogRangeInputs[index].step = step ? parseFloat(step) : 1;
       dialogRangeInputs[index].stepValue = stepValue;
     } else {
       dialogRangeInputs.push({
         label: label,
         start: parseFloat(start),
         end: parseFloat(end),
-        offset: offset ? parseFloat(offset) : 1,
+        step: step ? parseFloat(step) : 1,
         stepValue: stepValue,
       });
     }
