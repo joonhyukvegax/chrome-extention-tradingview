@@ -487,7 +487,11 @@ async function adjustValue(input, targetValue, increaseButton, decreaseButton) {
 }
 
 // get multiple values handle
-async function multipleCollectAndGenerateCSV(inputs, randomCount = null) {
+async function multipleCollectAndGenerateCSV(
+  inputs,
+  randomCount = null,
+  delayTimeValue
+) {
   const inputLabels = inputs.map((input) => input.label);
 
   let combinations = generateOffsetCombinations(inputs);
@@ -559,7 +563,7 @@ async function multipleCollectAndGenerateCSV(inputs, randomCount = null) {
       }
     }
 
-    await waitForSpinner(1000);
+    await waitForSpinner(delayTimeValue ? delayTimeValue : 1000);
 
     const currentData = gatherData();
     collectData.push(...currentData);
@@ -618,7 +622,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       })();
       return true;
     case "getMultipleValues":
-      multipleCollectAndGenerateCSV(request.data, request.randomCount);
+      multipleCollectAndGenerateCSV(
+        request.data,
+        request.randomCount,
+        request.delayTimeValue
+      );
       sendResponse({ result: "getMultipleValues" });
       break;
     case "getStepValues": {

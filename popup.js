@@ -6,6 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const randomCountInput = document.getElementById("randomCount");
   const getMultipleValuesButton = document.getElementById("getMultipleValues");
 
+  const delayTimeInput = document.getElementById("delayTimeInput");
+  let delayTimeValue = Number(delayTimeInput.value) || 1000;
+  delayTimeInput.addEventListener("input", (event) => {
+    delayTimeValue = Number(event.target.value);
+    console.error("delayTimeValue: ", delayTimeValue);
+  });
+
   // {"targetLabel":"Length","start":175,"end":177,offset:1} 데이터 수집
   getMultipleValuesButton.addEventListener("click", () => {
     const randomCount = randomCheckbox.checked
@@ -19,7 +26,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       chrome.tabs.sendMessage(
         tabs[0].id,
-        { action: "getMultipleValues", data: dialogRangeInputs, randomCount },
+        {
+          action: "getMultipleValues",
+          data: dialogRangeInputs,
+          randomCount,
+          delayTimeValue,
+        },
         (response) => {
           if (chrome.runtime.lastError) {
             console.error(chrome.runtime.lastError);
