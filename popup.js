@@ -2,6 +2,25 @@ let collectedData = [];
 let dialogRangeInputs = []; // extension popup values only use number type
 
 document.addEventListener("DOMContentLoaded", () => {
+  const tabs = document.querySelectorAll(".tab");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      if (tab.id === "tab-history") {
+        loadHistory();
+      }
+
+      tabContents.forEach((tc) => tc.classList.remove("active"));
+      document
+        .getElementById(tab.getAttribute("id").replace("tab-", ""))
+        .classList.add("active");
+    });
+  });
+
   const randomCheckbox = document.getElementById("random");
   const randomCountInput = document.getElementById("randomCount");
   const getMultipleValuesButton = document.getElementById("getMultipleValues");
@@ -261,6 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isNaN(parseFloat(start)) || isNaN(parseFloat(end))) {
       return;
     }
+
     const index = dialogRangeInputs.findIndex((input) => input.label === label);
     if (index !== -1) {
       dialogRangeInputs[index].start = parseFloat(start);
@@ -283,3 +303,52 @@ document.addEventListener("DOMContentLoaded", () => {
     randomCountInput.disabled = !randomCheckbox.checked;
   });
 });
+
+// function loadHistory() {
+//   const history = localStorage.getItem("param_search_history") || [];
+
+//   alert(JSON.stringify(history));
+//   if (history) {
+//     displayHistory(history);
+//   }
+// }
+
+function loadHistory() {
+  chrome.runtime.sendMessage({ action: "loadHistory" }, (response) => {
+    //
+    alert(JSON.stringify(response));
+    if (response && response.history) {
+      displayHistory(response.history);
+    }
+  });
+}
+
+function displayHistory(history) {
+  const historyListContainer = document.getElementById("historyList");
+  historyListContainer.innerHTML = "";
+
+  history.forEach((entry) => {
+    const entryDiv = document.createElement("div");
+    entryDiv.classList.add("history-entry");
+    entryDiv.textContent = `ID: ${entry._id}, Date: ${entry.createdAt}`;
+
+    const continueButton = document.createElement("button");
+    continueButton.textContent = "Continue";
+    continueButton.addEventListener("click", () => continueSearch(entry));
+
+    entryDiv.appendChild(continueButton);
+    historyListContainer.appendChild(entryDiv);
+  });
+}
+
+function continueSearch(entry) {
+  chrome.runtime.sendMessage(
+    {
+      action: "continueSearch",
+      entry: entry,
+    },
+    (response) => {
+      console.log(response.result);
+    }
+  );
+}

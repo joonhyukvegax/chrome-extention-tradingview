@@ -4,9 +4,10 @@
     <title>Popup</title>
     <style>
       body {
-        width: 480px;
+        width: 520px;
         border-radius: 8px;
         padding: 4px;
+        opacity: 0.8;
       }
       input {
         width: 100px;
@@ -73,6 +74,8 @@
       .label-wrapper{
         display: flex;
         align-items: center;
+        width: 100px;
+        overflow: auto;
       }
       .input-number-wrapper{
         width: 100%;
@@ -88,7 +91,7 @@
         
       }
       .step-input{
-        width: 32px;
+        width: 52px;
       }
       .flex-center{
         display: flex;
@@ -96,23 +99,86 @@
         justify-content: center;
         align-items: center;
       }
+      .tabs {
+        width: 100%;
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #ccc;
+      }
+        .tab {
+        padding: 10px 20px;
+        background-color: #f1f1f1;
+        cursor: pointer;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .tab.active {
+        background-color: #1479ed;
+        color: white;
+      }
+      .tab-content {
+        display: none;
+        width: 100%;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .history-entry {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        background-color: #f9f9f9;
+        transition: all 0.3s ease;
+      }
+      .history-entry:hover {
+        background-color: #e9e9e9;
+      }
+      .history-entry button {
+        padding: 4px 8px;
+        font-size: 10px;
+        background-color: white;
+        border: 1px solid #1479ed;
+        border-radius: 4px;
+      }
+      .history-entry button:hover {
+        background-color: #1479ed;
+        color: white;
+      }
     </style>
   </head>
   <body>
     <section class="sectionContainer">
-      <h1 class="title">TV Parameter Searcher</h1>
-    <div class="container">
-      <button class="action-button big-button" id="getInput">Strategy Inputs</button>
-      <button class="action-button big-button" id="collectingAction">Current Summary</button>
-      <button class="action-button big-button" id="getMultipleValues">Multiple Inputs</button>
-      <div class="flex-center">
-        <label for="random">random pick</label>
-        <input type="checkbox" name="random" id="random"></input>
-        <input type="number" id="randomCount" class="random-input" placeholder="Count" disabled>
-        <input type="text" id="delayTimeInput" placeholder="Time adjustments for tables" value="1000">
+      <h1 class="title">TV Param Search</h1>
+      <div class="tabs">
+        <div class="tab active" id="tab-parameter-setting">Parameter Setting</div>
+        <div class="tab" id="tab-history">History</div>
       </div>
-    </div>
-    <div id="inputValues" class="input-container"></div>
+      <div id="parameter-setting" class="tab-content active">
+        <div class="container">
+          <button class="action-button big-button" id="getInput">Strategy Inputs</button>
+          <button class="action-button big-button" id="collectingAction">Current Summary</button>
+          <button class="action-button big-button" id="getMultipleValues">Multiple Inputs</button>
+          <div class="flex-center">
+            <label for="random">random pick</label>
+            <input type="checkbox" name="random" id="random"></input>
+            <input type="number" id="randomCount" class="random-input" placeholder="Count" disabled>
+            <input type="text" id="delayTimeInput" placeholder="Time adjustments for tables" value="1000">
+          </div>
+        </div>
+        <div id="inputValues" class="input-container"></div>
+      </div>
+      <div id="history" class="tab-content">
+        <div id="historyList" class="container">
+          <button class="action-button big-button" id="getHistory">Get History</button>
+          <button class="action-button big-button" id="clearHistory">Clear History</button>
+        </div>
+      </div>
     <script src="popup.js"></script>
     <section>
   </body>

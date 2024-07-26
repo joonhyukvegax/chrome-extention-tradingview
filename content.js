@@ -393,6 +393,7 @@ async function getInputs() {
               .querySelector(".controlWrapper-DBTazUk2")
               .querySelectorAll("button");
 
+            console.error("buttons: ", buttons.length);
             if (buttons.length > 0) {
               const increaseButton = buttons[0];
               const decreaseButton = buttons[1];
@@ -424,6 +425,11 @@ async function getInputs() {
   return inputs;
 }
 
+/**
+ * @deprecated
+ * @param {*} arr
+ * @returns
+ */
 function generateCombinations(arr) {
   const results = [];
 
@@ -450,8 +456,10 @@ function generateCombinations(arr) {
 function generateStepCombinations(arr) {
   const results = [];
 
-  // combination annotation
-  // alert(JSON.stringify(arr));
+  function getDecimalPlaces(num) {
+    const decimalPart = num.toString().split(".")[1];
+    return decimalPart ? decimalPart.length : 0;
+  }
 
   function helper(prefix, index) {
     if (index === arr.length) {
@@ -461,22 +469,32 @@ function generateStepCombinations(arr) {
 
     const range = arr[index];
 
-    const stepMultiplier = Math.pow(
-      10,
-      range.stepValue.toString().split(".")[1]?.length || 0
-    ); // stepValue 소수점 자릿수
+    // start, end, step의 소숫점 자릿수를 계산하여 가장 큰 자릿수를 사용
+    const decimalPlaces = Math.max(
+      getDecimalPlaces(range.start),
+      getDecimalPlaces(range.end),
+      getDecimalPlaces(range.step)
+    );
 
-    const start = range.start * stepMultiplier;
-    const end = range.end * stepMultiplier;
-    const step = range.step * stepMultiplier;
+    const multiplier = Math.pow(10, decimalPlaces);
+
+    const start = Math.round(range.start * multiplier);
+    const end = Math.round(range.end * multiplier);
+    const step = Math.round(range.step * multiplier);
 
     if (start <= end) {
       for (let i = start; i <= end; i += step) {
-        helper(prefix.concat(i / stepMultiplier), index + 1); // 원래 값으로 복원
+        helper(
+          prefix.concat(Number((i / multiplier).toFixed(decimalPlaces))),
+          index + 1
+        ); // 원래 값으로 복원하고 toFixed 적용
       }
     } else {
       for (let i = start; i >= end; i -= step) {
-        helper(prefix.concat(i / stepMultiplier), index + 1); // 원래 값으로 복원
+        helper(
+          prefix.concat(Number((i / multiplier).toFixed(decimalPlaces))),
+          index + 1
+        ); // 원래 값으로 복원하고 toFixed 적용
       }
     }
   }
@@ -485,6 +503,7 @@ function generateStepCombinations(arr) {
 
   return results;
 }
+
 async function adjustValue(input, targetValue, increaseButton, decreaseButton) {
   return new Promise((resolve) => {
     const interval = setInterval(() => {
@@ -508,16 +527,37 @@ async function multipleCollectAndGenerateCSV(
   randomCount = null,
   delayTimeValue
 ) {
+  // TODO: 인풋의 combination을 생성 할때 input stepValue를 고려해서 불가능한 값의 배열이 될 수 있음
   const inputLabels = inputs.map((input) => input.label);
-
   let combinations = generateStepCombinations(inputs);
   // 랜덤 갯수만큼 조합을 선택
   if (randomCount && randomCount > 0) {
     combinations = fisherYatesShuffle(combinations).slice(0, randomCount);
   }
 
-  let savedCombinations = loadFromLocalStorage("combinations") || [];
-  let savedData = loadFromLocalStorage("collectData") || [];
+  const currentID = Date.now();
+  console.error("currentID: ", currentID);
+  // 라벨과 콤비네이션을 로컬스토리지에 저장 (히스토리 방식으로 저장)
+  
+  const savedHistory = loadFromLocalStorage("param_search_history") || [];
+
+  const newSavedHistory = [
+    ...savedHistory,
+    {
+      _id: currentID,
+      createdAt: formatDate(new Date()),
+      inputLabels,
+      combinations,
+      setting: {
+        inputs,
+        randomCount,
+        delayTimeValue,
+      },
+      collectData: [], // 새로 추가된 데이터를 저장할 필드
+    },
+  ];
+
+  saveToLocalStorage("param_search_history", newSavedHistory);
 
   let collectData = [];
 
@@ -542,7 +582,7 @@ async function multipleCollectAndGenerateCSV(
       const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
 
       if (cells.length === 0) {
-        alert("No cells found");
+        console.error("No cells found");
         return;
       }
 
@@ -586,6 +626,25 @@ async function multipleCollectAndGenerateCSV(
 
     const currentData = gatherData();
     collectData.push(...currentData);
+
+    // 업데이트된 히스토리로 교체
+    const updatedHistory = (
+      loadFromLocalStorage("param_search_history") || []
+    ).map((history) => {
+      if (history._id === currentID) {
+        const updatedCombinations = history.combinations.filter(
+          (comb) => JSON.stringify(comb) !== JSON.stringify(combination)
+        );
+        return {
+          ...history,
+          combinations: updatedCombinations,
+          collectData: [...history.collectData, ...currentData],
+        };
+      }
+      return history;
+    });
+
+    saveToLocalStorage("param_search_history", updatedHistory);
   }
   downloadCSV(collectData);
 }
