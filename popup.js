@@ -10,10 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tabs.forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
 
-      if (tab.id === "tab-history") {
-        loadHistory();
-      }
-
       tabContents.forEach((tc) => tc.classList.remove("active"));
       document
         .getElementById(tab.getAttribute("id").replace("tab-", ""))
@@ -26,10 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const getMultipleValuesButton = document.getElementById("getMultipleValues");
 
   const delayTimeInput = document.getElementById("delayTimeInput");
-  let delayTimeValue = Number(delayTimeInput.value) || 1000;
+  let delayTimeValue = Number(delayTimeInput.value) || 5000;
   delayTimeInput.addEventListener("input", (event) => {
     delayTimeValue = Number(event.target.value);
-    console.error("delayTimeValue: ", delayTimeValue);
   });
 
   // {"targetLabel":"Length","start":175,"end":177,step:1} 데이터 수집
@@ -304,51 +299,94 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// function loadHistory() {
-//   const history = localStorage.getItem("param_search_history") || [];
-
-//   alert(JSON.stringify(history));
-//   if (history) {
-//     displayHistory(history);
-//   }
-// }
-
-function loadHistory() {
-  chrome.runtime.sendMessage({ action: "loadHistory" }, (response) => {
-    //
-    alert(JSON.stringify(response));
-    if (response && response.history) {
-      displayHistory(response.history);
+document.getElementById("getHistory").addEventListener("click", () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length === 0) {
+      console.error("No active tabs found");
+      return;
     }
+    chrome.tabs.sendMessage(
+      tabs[0].id,
+      { action: "getHistory" },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            "getHistory: ",
+            JSON.stringify(chrome.runtime.lastError)
+          );
+        } else {
+          displayHistory(response.history);
+        }
+      }
+    );
   });
-}
+});
 
 function displayHistory(history) {
-  const historyListContainer = document.getElementById("historyList");
-  historyListContainer.innerHTML = "";
+  const historyList = document.getElementById("historyList");
+  // sort by date history
 
-  history.forEach((entry) => {
-    const entryDiv = document.createElement("div");
-    entryDiv.classList.add("history-entry");
-    entryDiv.textContent = `ID: ${entry._id}, Date: ${entry.createdAt}`;
+  const sortedHistory = history.sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
 
-    const continueButton = document.createElement("button");
-    continueButton.textContent = "Continue";
-    continueButton.addEventListener("click", () => continueSearch(entry));
+  sortedHistory.forEach((entry) => {
+    const combinationArr = entry.combinations;
 
-    entryDiv.appendChild(continueButton);
-    historyListContainer.appendChild(entryDiv);
+    const historyContainer = document.createElement("div");
+    historyContainer.classList.add("history-entry");
+    historyContainer.textContent = `ID: ${entry._id}, Date: ${entry.createdAt}`;
+
+    const historyListContainer = document.createElement("div");
+    historyListContainer.classList.add(["sectionContainer", "padding-8"]);
+
+    if (combinationArr.length > 0) {
+      const continueButton = document.createElement("button");
+      continueButton.classList.add("action-button");
+      continueButton.textContent = "Continue";
+      continueButton.addEventListener("click", () =>
+        continueParamSearch(entry)
+      );
+
+      historyContainer.appendChild(continueButton);
+    }
+
+    const labelArea = document.createElement("div");
+    labelArea.textContent = `Label : ${entry.inputLabels}`;
+
+    const combinationArea = document.createElement("div");
+
+    combinationArea.textContent = `Combination : ${JSON.stringify(
+      entry.combinations
+    )}`;
+    historyContainer.appendChild(historyListContainer);
+    historyListContainer.appendChild(labelArea);
+    historyListContainer.appendChild(combinationArea);
+
+    historyList.appendChild(historyContainer);
   });
 }
 
-function continueSearch(entry) {
-  chrome.runtime.sendMessage(
-    {
-      action: "continueSearch",
-      entry: entry,
-    },
-    (response) => {
-      console.log(response.result);
+function continueParamSearch(history) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length === 0) {
+      console.error("No active tabs found");
+      return;
     }
-  );
+
+    chrome.tabs.sendMessage(
+      tabs[0].id,
+      {
+        action: "continueParamSearch",
+        history: history,
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError);
+        } else {
+          console.log(response.result);
+        }
+      }
+    );
+  });
 }

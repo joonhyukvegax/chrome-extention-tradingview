@@ -393,7 +393,6 @@ async function getInputs() {
               .querySelector(".controlWrapper-DBTazUk2")
               .querySelectorAll("button");
 
-            console.error("buttons: ", buttons.length);
             if (buttons.length > 0) {
               const increaseButton = buttons[0];
               const decreaseButton = buttons[1];
@@ -536,9 +535,9 @@ async function multipleCollectAndGenerateCSV(
   }
 
   const currentID = Date.now();
-  console.error("currentID: ", currentID);
+
   // 라벨과 콤비네이션을 로컬스토리지에 저장 (히스토리 방식으로 저장)
-  
+
   const savedHistory = loadFromLocalStorage("param_search_history") || [];
 
   const newSavedHistory = [
@@ -622,7 +621,7 @@ async function multipleCollectAndGenerateCSV(
       }
     }
 
-    await waitForSpinner(delayTimeValue ? delayTimeValue : 1000);
+    await waitForSpinner(delayTimeValue ? delayTimeValue : 5000);
 
     const currentData = gatherData();
     collectData.push(...currentData);
@@ -687,6 +686,102 @@ async function getInputStep(input, increaseButton, decreaseButton) {
   return stepValue;
 }
 
+async function continueCollectAndGenerateCSV(history) {
+  // TODO: 인풋의 combination을 생성 할때 input stepValue를 고려해서 불가능한 값의 배열이 될 수 있음
+  const inputLabels = history.inputLabels;
+  let combinations = history.combinations;
+  const currentID = history;
+  let collectData = history.collectData;
+  const delayTimeValue = history.setting.delayTimeValue;
+
+  for (const combination of combinations) {
+    const labelCombination = combination.map((value, index) => {
+      return {
+        label: inputLabels[index],
+        value: value,
+      };
+    });
+
+    const inputDialog = document.querySelector(".content-tBgV1m0B");
+
+    if (!inputDialog) {
+      alert("open Inputs Dialog");
+      return;
+    }
+
+    for (const data of labelCombination) {
+      const targetLabel = data.label;
+      const targetValue = data.value;
+      const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
+
+      if (cells.length === 0) {
+        console.error("No cells found");
+        return;
+      }
+
+      for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+        const labelElem = cell.classList.contains("first-tBgV1m0B");
+        const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
+
+        if (labelElem && labelInnerElem.innerText.trim() === targetLabel) {
+          const cellValue = cells[i + 1];
+          if (cellValue) {
+            const input = cellValue.querySelector("input");
+            if (input) {
+              input.focus();
+              input.select();
+
+              const buttons = cellValue
+                .querySelector(".controlWrapper-DBTazUk2")
+                .querySelectorAll("button");
+
+              if (buttons.length > 0) {
+                const increaseButton = buttons[0];
+                const decreaseButton = buttons[1];
+
+                await adjustValue(
+                  input,
+                  targetValue,
+                  increaseButton,
+                  decreaseButton
+                );
+              } else {
+                alert("Increase and Decrease buttons not found");
+              }
+            }
+          }
+        }
+      }
+    }
+
+    await waitForSpinner(delayTimeValue ? delayTimeValue : 5000);
+
+    const currentData = gatherData();
+    collectData.push(...currentData);
+
+    // 업데이트된 히스토리로 교체
+    const updatedHistory = (
+      loadFromLocalStorage("param_search_history") || []
+    ).map((history) => {
+      if (history._id === currentID) {
+        const updatedCombinations = history.combinations.filter(
+          (comb) => JSON.stringify(comb) !== JSON.stringify(combination)
+        );
+        return {
+          ...history,
+          combinations: updatedCombinations,
+          collectData: [...history.collectData, ...currentData],
+        };
+      }
+      return history;
+    });
+
+    saveToLocalStorage("param_search_history", updatedHistory);
+  }
+  downloadCSV(collectData);
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case "collectingAction":
@@ -699,6 +794,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ data: inputs });
       })();
       return true;
+    case "getHistory":
+      sendResponse({
+        history: loadFromLocalStorage("param_search_history") || [],
+      });
+      return true;
     case "getMultipleValues":
       multipleCollectAndGenerateCSV(
         request.data,
@@ -707,7 +807,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       );
       sendResponse({ result: "getMultipleValues" });
       break;
-    case "getStepValues": {
+    case "continueParamSearch": {
+      continueCollectAndGenerateCSV(request.history);
+      sendResponse({ result: "continueSearch completed" });
+      return true;
+    }
+    case "loadHistory": {
+      chrome.storage.local.get(["param_search_history"], (result) => {
+        sendResponse({ history: result.param_search_history || [] });
+      });
+      return true;
     }
     default:
       console.error("Unknown action");

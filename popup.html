@@ -126,9 +126,7 @@
         display: block;
       }
       .history-entry {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        width: 100%;
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 5px;
@@ -150,6 +148,9 @@
         background-color: #1479ed;
         color: white;
       }
+      .padding-8 {
+        padding: 8px;
+      }
     </style>
   </head>
   <body>
@@ -168,15 +169,17 @@
             <label for="random">random pick</label>
             <input type="checkbox" name="random" id="random"></input>
             <input type="number" id="randomCount" class="random-input" placeholder="Count" disabled>
-            <input type="text" id="delayTimeInput" placeholder="Time adjustments for tables" value="1000">
+            <input type="text" id="delayTimeInput" placeholder="Time adjustments for tables" value="5000">
           </div>
         </div>
         <div id="inputValues" class="input-container"></div>
       </div>
       <div id="history" class="tab-content">
-        <div id="historyList" class="container">
+        <div id="historyButttons" class="sectionContainer">
           <button class="action-button big-button" id="getHistory">Get History</button>
           <button class="action-button big-button" id="clearHistory">Clear History</button>
+        </div>
+        <div id="historyList" class="sectionContainer padding-8">
         </div>
       </div>
     <script src="popup.js"></script>
