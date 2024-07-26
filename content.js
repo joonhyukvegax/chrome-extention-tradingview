@@ -225,7 +225,12 @@ const downloadCSV = (collectedData) => {
       if (entry.type === "input") {
         rowData.push(entry.value);
       } else if (entry.type === "table") {
-        rowData.push(entry.values.all);
+        let cleanedValue = entry.values.all.replace(/,/g, "");
+        if (/[^0-9.]/.test(cleanedValue)) {
+          // If value contains characters other than digits and dot, enclose in quotes
+          cleanedValue = `"${entry.values.all}"`;
+        }
+        rowData.push(cleanedValue);
       }
     });
     csvContent += rowData.join(",") + "\n";
@@ -239,7 +244,6 @@ const downloadCSV = (collectedData) => {
   tableLink.click();
   document.body.removeChild(tableLink);
 };
-
 /**
  * Download the Excel file from the TV strategy tester
  */
