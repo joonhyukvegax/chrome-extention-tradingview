@@ -68,8 +68,14 @@ function loadFromLocalStorage(key) {
 }
 
 // 로컬 스토리지에서 데이터 삭제
-function removeFromLocalStorage(key) {
+function clearFromLocalStorage(key) {
   localStorage.removeItem(key);
+}
+
+function clearFromLocalStorageById(key, id) {
+  const history = loadFromLocalStorage(key) || [];
+  const updatedHistory = history.filter((h) => h._id !== id);
+  saveToLocalStorage("param_search_history", updatedHistory);
 }
 
 /**
@@ -798,11 +804,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ data: inputs });
       })();
       return true;
-    case "getHistory":
-      sendResponse({
-        history: loadFromLocalStorage("param_search_history") || [],
-      });
-      return true;
     case "getMultipleValues":
       multipleCollectAndGenerateCSV(
         request.data,
@@ -811,16 +812,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       );
       sendResponse({ result: "getMultipleValues" });
       break;
+    // History Tab
+    case "getHistory":
+      sendResponse({
+        history: loadFromLocalStorage("param_search_history") || [],
+      });
+      return true;
     case "continueParamSearch": {
       continueCollectAndGenerateCSV(request.history);
       sendResponse({ result: "continueSearch completed" });
       return true;
     }
-    case "loadHistory": {
-      chrome.storage.local.get(["param_search_history"], (result) => {
-        sendResponse({ history: result.param_search_history || [] });
-      });
-      return true;
+    case "clearHistory": {
+      clearFromLocalStorage("param_search_history");
+      sendResponse({ result: "removeHistory completed" });
+      break;
+    }
+    case "clearHistoryById": {
+      clearFromLocalStorageById("param_search_history", request.id);
+      sendResponse({ result: "removeHistory completed" });
+      break;
     }
     default:
       console.error("Unknown action");

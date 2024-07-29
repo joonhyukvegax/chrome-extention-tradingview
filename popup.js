@@ -299,6 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// "Get History" 버튼 클릭 시 localstorage에 수집된 데이터를 content script에 메시지로 요청 하여 히스토리를 가져옴
 document.getElementById("getHistory").addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs.length === 0) {
@@ -332,7 +333,6 @@ function displayHistory(history) {
 
   sortedHistory.forEach((entry) => {
     const combinationArr = entry.combinations;
-
     const historyContainer = document.createElement("div");
     historyContainer.classList.add("history-entry");
     historyContainer.textContent = `ID: ${entry._id}, Date: ${entry.createdAt}`;
@@ -350,6 +350,32 @@ function displayHistory(history) {
 
       historyContainer.appendChild(continueButton);
     }
+
+    const deleteButton = document.createElement("button");
+    deleteButton.classList.add("delete");
+    deleteButton.textContent = "X";
+    deleteButton.addEventListener("click", () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length === 0) {
+          console.error("No active tabs found");
+          return;
+        }
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          { action: "clearHistoryById", id: entry._id },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError);
+            } else {
+              alert(response.result);
+              historyList.removeChild(historyContainer);
+            }
+          }
+        );
+      });
+    });
+
+    historyContainer.appendChild(deleteButton);
 
     const labelArea = document.createElement("div");
     labelArea.textContent = `Label : ${entry.inputLabels}`;
@@ -390,3 +416,28 @@ function continueParamSearch(history) {
     );
   });
 }
+
+// "Get History" 버튼 클릭 시 localstorage에 수집된 데이터를 content script에 메시지로 요청 하여 히스토리를 가져옴
+document.getElementById("clearHistory").addEventListener("click", () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length === 0) {
+      console.error("No active tabs found");
+      return;
+    }
+    chrome.tabs.sendMessage(
+      tabs[0].id,
+      { action: "clearHistory" },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            "clearHistory: ",
+            JSON.stringify(chrome.runtime.lastError)
+          );
+        } else {
+          console.error("clearHistory: ", response.result);
+          alert(response.result);
+        }
+      }
+    );
+  });
+});

@@ -37,10 +37,8 @@
       .container {
         width: 100%;
         display: flex;
-        justify-content: center;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
+        gap: 4px;
       }
       .action-button{
           padding: 4px 8px;
@@ -54,8 +52,7 @@
           }
         }
       .big-button{
-        font-size: 14px;
-        font-weight: bold;
+        font-size: 12px;
       }
       .input-container {
         display: flex;
@@ -63,6 +60,11 @@
         gap: 5px;
         max-height: 400px;
         overflow-y: auto;
+      }
+      .label-flex {
+        display: flex;
+        gap: 5px;
+        align-items: center;
       }
       .input-flex-container {
         width: 100%;
@@ -93,19 +95,13 @@
       .step-input{
         width: 52px;
       }
-      .flex-center{
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-      }
       .tabs {
         width: 100%;
         display: flex;
-        margin-bottom: 20px;
+        margin-bottom: 12px;
         border-bottom: 2px solid #ccc;
       }
-        .tab {
+      .tab {
         padding: 10px 20px;
         background-color: #f1f1f1;
         cursor: pointer;
@@ -126,6 +122,7 @@
         display: block;
       }
       .history-entry {
+        position:relative;
         width: 100%;
         padding: 10px;
         border: 1px solid #ccc;
@@ -148,8 +145,20 @@
         background-color: #1479ed;
         color: white;
       }
+      .history-entry button.delete {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+      }
       .padding-8 {
         padding: 8px;
+      }
+      .random-input {
+        width: 100px;
+      }
+      .checkbox-input{
+        width: 12px;
+        height: 12px;
       }
     </style>
   </head>
@@ -165,20 +174,25 @@
           <button class="action-button big-button" id="getInput">Strategy Inputs</button>
           <button class="action-button big-button" id="collectingAction">Current Summary</button>
           <button class="action-button big-button" id="getMultipleValues">Multiple Inputs</button>
-          <div class="flex-center">
-            <label for="random">random pick</label>
-            <input type="checkbox" name="random" id="random"></input>
+          <div>
+            <div class="label-flex">
+              <label for="random">isRandom</label>
+              <input class="checkbox-input" type="checkbox" name="random" id="random"></input>
+            </div>
             <input type="number" id="randomCount" class="random-input" placeholder="Count" disabled>
+          </div>
+          <div>
+            <label for="delayTimeInput">delayTime</label>
             <input type="text" id="delayTimeInput" placeholder="Time adjustments for tables" value="5000">
           </div>
         </div>
         <div id="inputValues" class="input-container"></div>
       </div>
-      <div id="history" class="tab-content">
-        <div id="historyButttons" class="sectionContainer">
-          <button class="action-button big-button" id="getHistory">Get History</button>
-          <button class="action-button big-button" id="clearHistory">Clear History</button>
-        </div>
+      <div id="history" class="tab-content">  
+          <div class="container">
+            <button class="action-button big-button" id="getHistory">Get History</button>
+            <button class="action-button big-button" id="clearHistory">Clear History</button>
+          </div>
         <div id="historyList" class="sectionContainer padding-8">
         </div>
       </div>
