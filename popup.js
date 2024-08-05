@@ -1,5 +1,6 @@
 let collectedData = [];
 let dialogRangeInputs = []; // extension popup values only use number type
+let dateInputs = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   const tabs = document.querySelectorAll(".tab");
@@ -20,6 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const randomCheckbox = document.getElementById("random");
   const randomCountInput = document.getElementById("randomCount");
   const getMultipleValuesButton = document.getElementById("getMultipleValues");
+  const getBackTestingActionButton = document.getElementById(
+    "getBackTestingAction"
+  );
 
   const delayTimeInput = document.getElementById("delayTimeInput");
   let delayTimeValue = Number(delayTimeInput.value) || 5000;
@@ -58,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // "Add Button" 버튼 클릭 시 content script에 메시지 전송
-  document.getElementById("collectingAction").addEventListener("click", () => {
+  document.getElementById("getCurrentSummary").addEventListener("click", () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs.length === 0) {
         console.error("No active tabs found");
@@ -66,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       chrome.tabs.sendMessage(
         tabs[0].id,
-        { action: "collectingAction" },
+        { action: "getCurrentSummary" },
         (response) => {
           if (chrome.runtime.lastError) {
             console.error(chrome.runtime.lastError);
@@ -296,6 +300,89 @@ document.addEventListener("DOMContentLoaded", () => {
   // 추가된 부분: 랜덤 체크박스와 갯수 입력 필드 이벤트 리스너
   randomCheckbox.addEventListener("change", function () {
     randomCountInput.disabled = !randomCheckbox.checked;
+  });
+
+  // back testing
+
+  // 추가된 부분: 날짜 입력 추가 기능
+  const addDateButton = document.querySelector(".add-date");
+  const dateInputsContainer = document.getElementById("dateInputs");
+
+  addDateButton.addEventListener("click", function () {
+    const newDateInputWrapper = document.createElement("div");
+    newDateInputWrapper.classList.add("date-input-wrapper");
+    newDateInputWrapper.innerHTML = `
+        <label for="startDate">startDate</label>
+        <input type="date" name="startDate">
+        <label for="endDate">endDate</label>
+        <input type="date" name="endDate">
+        <button class="remove-date">-</button>
+      `;
+    dateInputsContainer.appendChild(newDateInputWrapper);
+
+    newDateInputWrapper
+      .querySelector(".remove-date")
+      .addEventListener("click", function () {
+        dateInputsContainer.removeChild(newDateInputWrapper);
+        updateDateInputs(); // 날짜 입력 필드를 제거한 후에도 배열을 업데이트합니다.
+      });
+
+    newDateInputWrapper.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("change", updateDateInputs);
+      console.log(dateInputs);
+    });
+  });
+
+  function updateDateInputs() {
+    console.log(document.querySelectorAll(".date-input-wrapper").length);
+    dateInputs = Array.from(document.querySelectorAll(".date-input-wrapper"))
+      .map((wrapper) => {
+        return {
+          startDate: wrapper.querySelector('input[name="startDate"]').value,
+          endDate: wrapper.querySelector('input[name="endDate"]').value,
+        };
+      })
+      .filter((dates) => dates.startDate && dates.endDate);
+    console.log(dateInputs);
+  }
+
+  // Back Testing Action
+  getBackTestingActionButton.addEventListener("click", () => {
+    console.log(dateInputs);
+    const randomCount = randomCheckbox.checked
+      ? parseInt(randomCountInput.value)
+      : null;
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs.length === 0) {
+        console.error("No active tabs found");
+        return;
+      }
+
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        // {
+        //   action: "getBackTestingAction",
+        //   dateRanges: dateInputs,
+        //   data: dialogRangeInputs,
+        //   randomCount,
+        //   delayTimeValue,
+        // },
+        {
+          action: "dateSettings",
+          dateRanges: dateInputs,
+          data: dialogRangeInputs,
+          randomCount,
+          delayTimeValue,
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+          } else {
+            console.log(response.result);
+          }
+        }
+      );
+    });
   });
 });
 

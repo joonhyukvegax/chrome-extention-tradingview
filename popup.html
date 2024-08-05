@@ -42,6 +42,17 @@
         margin-bottom: 12px;
         height: 40px;
       }
+      .date-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: red;
+      }
       .action-button{
           white-space: nowrap;
           padding: 4px 8px;
@@ -172,6 +183,27 @@
       .input-text{
         width: 64px;
       }
+      .date-input-wrapper {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .date-input-wrapper input {
+        width: 130px;
+      }
+      .date-input-wrapper button {
+        padding: 2px 6px;
+        font-size: 12px;
+        background-color: #1479ed;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .date-input-wrapper button:hover {
+        background-color: #0d5cba;
+      }
     </style>
   </head>
   <body>
@@ -179,13 +211,13 @@
       <h1 class="title">TV Param Search</h1>
       <div class="tabs">
         <div class="tab active" id="tab-parameter-setting">Parameter Setting</div>
-        <div class="tab" id="tab-deep-backtesting">DeepBack Testing</div>
+        <div class="tab" id="tab-deep-back-testing">DeepBack Testing</div>
         <div class="tab" id="tab-history">History</div>
       </div>
       <div id="parameter-setting" class="tab-content active">
         <div class="container">
-          <button class="action-button big-button" id="getInput">Strategy Inputs</button>
-          <button class="action-button big-button" id="collectingAction">Current Summary</button>
+          <button class="action-button big-button" id="getInput">Get Input Values</button>
+          <button class="action-button big-button" id="getCurrentSummary">Current Summary</button>
           <button class="action-button big-button" id="getMultipleValues">Multiple Inputs</button>
           <div class="label-input">
             <div class="label-flex">
@@ -202,6 +234,28 @@
         <div id="inputValues" class="input-container"></div>
       </div>
       <!-- Deep Back Testing -->
+      <div id="deep-back-testing" class="tab-content">
+        <div class="container">
+          <button class="action-button big-button" id="getInput">Get Input Values</button>
+          <button class="action-button big-button" id="getCurrentSummary">Current Summary</button>
+          <button class="action-button big-button" id="getBackTestingAction">Action</button>
+          <div class="label-input">
+            <div class="label-flex">
+              <label for="random">Random</label>
+              <input class="checkbox-input" type="checkbox" name="random" id="random"></input>
+            </div>
+            <input class="input-text" type="number" id="randomCount"  placeholder="Count" disabled>
+          </div>
+          <div class="label-input">
+            <label for="delayTimeInput">delayTime</label>
+            <input class="input-text" type="text" id="delayTimeInput" placeholder="Time adjustments for tables" value="5000">
+          </div>
+        </div>
+        <div id="dateInputs" class="date-container">
+            <button class="add-date">date-Ranges</button>
+        </div>
+        <div id="inputValues" class="input-container"></div>
+      </div>
       <div id="history" class="tab-content">  
           <div class="container">
             <button class="action-button big-button" id="getHistory">Get History</button>

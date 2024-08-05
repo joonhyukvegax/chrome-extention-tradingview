@@ -79,6 +79,25 @@ function clearFromLocalStorageById(key, id) {
 }
 
 /**
+ * 주어진 날짜 문자열과 "Month Year" 형식의 텍스트가 같은 년도와 월을 가지는지 확인하는 함수
+ * @param {string} dateString - "YYYY-MM-DD" 형식의 날짜 문자열
+ * @param {string} monthYearText - "Month Year" 형식의 텍스트
+ * @returns {boolean} - 일치하면 true, 그렇지 않으면 false
+ */
+function isMatchingMonthYear(dateString, monthYearText) {
+  // 날짜 문자열을 Date 객체로 변환
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.toLocaleString("default", { month: "long" });
+
+  // Month Year 텍스트를 분리
+  const [textMonth, textYear] = monthYearText.split(" ");
+
+  // 년도와 월 비교
+  return year === parseInt(textYear, 10) && month === textMonth;
+}
+
+/**
  * Gather data from TV strategy Performance Summary table
  * @returns {gatherDataType} - Array of objects containing the data
  * @typedef {Object} eachCellType
@@ -301,7 +320,7 @@ const clickTVDialogOkButton = () => {
   }
 };
 
-async function collectingAction() {
+async function getCurrentSummary() {
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
   if (!inputDialog) {
@@ -545,6 +564,7 @@ async function multipleCollectAndGenerateCSV(
   }
 
   const currentID = Date.now();
+  const type = "param_search"; // "param_search" or "back_testing"
 
   // 라벨과 콤비네이션을 로컬스토리지에 저장 (히스토리 방식으로 저장)
 
@@ -554,6 +574,7 @@ async function multipleCollectAndGenerateCSV(
     ...savedHistory,
     {
       _id: currentID,
+      type,
       createdAt: formatDate(new Date()),
       inputLabels,
       combinations,
@@ -656,6 +677,48 @@ async function multipleCollectAndGenerateCSV(
     saveToLocalStorage("param_search_history", updatedHistory);
   }
   downloadCSV(collectData);
+}
+
+async function getBackTestingAction(
+  dateRanges,
+  inputs,
+  randomCount = null,
+  delayTimeValue
+) {
+  // TODO: 인풋의 combination을 생성 할때 input stepValue를 고려해서 불가능한 값의 배열이 될 수 있음
+  const inputLabels = inputs.map((input) => input.label);
+  let combinations = generateStepCombinations(inputs);
+  // 랜덤 갯수만큼 조합을 선택
+  if (randomCount && randomCount > 0) {
+    combinations = fisherYatesShuffle(combinations).slice(0, randomCount);
+  }
+
+  const currentID = Date.now();
+  const type = "back_testing"; // "param_search" or "back_testing"
+
+  // 라벨과 콤비네이션을 로컬스토리지에 저장 (히스토리 방식으로 저장)
+
+  const savedHistory = loadFromLocalStorage("param_search_history") || [];
+
+  const newSavedHistory = [
+    ...savedHistory,
+    {
+      _id: currentID,
+      type,
+      createdAt: formatDate(new Date()),
+      inputLabels,
+      dateRanges,
+      combinations,
+      setting: {
+        inputs,
+        randomCount,
+        delayTimeValue,
+      },
+      collectData: [], // 새로 추가된 데이터를 저장할 필드
+    },
+  ];
+  saveToLocalStorage("param_search_history", newSavedHistory);
+  let collectData = [];
 }
 
 async function calculateStepValue(input, increaseButton, decreaseButton) {
@@ -792,10 +855,82 @@ async function continueCollectAndGenerateCSV(history) {
   downloadCSV(collectData);
 }
 
+function clickTargetDateInDateDialog(calendar, targetDate) {
+  const days = calendar.querySelectorAll(".day-N6r5jhbE");
+  days.forEach((day) => {
+    const dayData = day.getAttribute("data-day");
+    if (dayData === targetDate) {
+      day.click();
+    }
+  });
+}
+
+/**
+ *
+ * @param {*} dateRanges : [ { startDate: "2024-01-01", endDate: "2024-02-29" },{ startDate: "2024-01-01", endDate: "2024-02-29" } ]
+ */
+async function dateSettings(dateRanges) {
+  alert(JSON.stringify(dateRanges));
+  const startEndCalendarWrppers = document.querySelectorAll(
+    ".container-WDZ0PRNh"
+  );
+  const startCalendarButton = startEndCalendarWrppers[0].querySelector(
+    ".inner-slot-W53jtLjw"
+  );
+  const endCalendarButton = startEndCalendarWrppers[1].querySelector(
+    ".inner-slot-W53jtLjw"
+  );
+  for (const dateRange of dateRanges) {
+    // 시작 날짜 설정
+    if (startCalendarButton) {
+      startCalendarButton.click();
+
+      await delay(500);
+      const dateRangeDialog = document.querySelector(".calendar-N6r5jhbE");
+      const calendar = dateRangeDialog.querySelector(".weeks-N6r5jhbE");
+
+      if (dateRangeDialog) {
+        // Start date에 맞는 달력 페이지로 이동
+        await navigateToMonthYear(dateRange.startDate, dateRangeDialog, () =>
+          clickTargetDateInDateDialog(calendar, dateRange.startDate)
+        );
+        await delay(1000);
+
+        if (endCalendarButton) {
+          endCalendarButton.click();
+
+          endCalendarButton.click();
+
+          await delay(1000);
+          const dateRangeDialog = document.querySelector(".calendar-N6r5jhbE");
+          const calendar = dateRangeDialog.querySelector(".weeks-N6r5jhbE");
+
+          if (dateRangeDialog) {
+            // Start date에 맞는 달력 페이지로 이동
+            await navigateToMonthYear(dateRange.endDate, dateRangeDialog, () =>
+              clickTargetDateInDateDialog(calendar, dateRange.endDate)
+            );
+          }
+          await delay(1000);
+          ClickGenerateReport();
+          await delay(1000);
+        } else {
+          console.error("Date Range Button not found");
+        }
+      }
+    } else {
+      console.error("Date Range Button not found");
+    }
+  }
+}
+
+async function ClickGenerateReport() {
+  document.querySelector(".generateReportBtn-zf0MHBzY").click();
+}
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
-    case "collectingAction":
-      collectingAction();
+    case "getCurrentSummary":
+      getCurrentSummary();
       sendResponse({ result: "Action completed" });
       break;
     case "getInputs":
@@ -811,6 +946,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         request.delayTimeValue
       );
       sendResponse({ result: "getMultipleValues" });
+      break;
+    // deep backtesting
+    case "getBackTestingAction":
+      getBackTestingAction(
+        request.dateRanges,
+        request.data,
+        request.randomCount,
+        request.delayTimeValue
+      );
+      sendResponse({ result: "getBackTestingAction" });
+      break;
+    case "dateSettings":
+      dateSettings(request.dateRanges);
+      sendResponse({ result: "dateSettings" });
       break;
     // History Tab
     case "getHistory":
@@ -837,3 +986,54 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.error("Unknown action");
   }
 });
+
+async function navigateToMonthYear(targetDate, dateRangeDialog, callback) {
+  const previousMonthButton = dateRangeDialog.querySelector(
+    '[aria-label*="Previous month"]'
+  );
+  const nextMonthButton = dateRangeDialog.querySelector(
+    '[aria-label*="Next month"]'
+  );
+
+  async function checkAndNavigate() {
+    const monthYearText = dateRangeDialog.querySelector(
+      ".ellipsisContainer-bYDQcOkp"
+    ).innerText;
+
+    // 값이 맞으면 콜백 실행
+    const isMatching = isMatchingMonthYear(targetDate, monthYearText);
+    if (isMatching) {
+      callback();
+    } else {
+      // 월을 분리  january -> 01
+      function getMonthNumber(monthName) {
+        const date = new Date(`${monthName} 1, 2000`);
+        const month = date.getMonth() + 1;
+        return month.toString().padStart(2, "0");
+      }
+
+      const targetDateObj = new Date(targetDate);
+      const [textMonth, textYear] = monthYearText.split(" ");
+      const currentDateObj = new Date(
+        `${textYear}-${getMonthNumber(textMonth)}-01`
+      );
+
+      if (targetDateObj < currentDateObj) {
+        if (previousMonthButton) {
+          previousMonthButton.click();
+          await delay(300);
+          checkAndNavigate();
+        }
+      }
+      if (targetDateObj > currentDateObj) {
+        if (nextMonthButton) {
+          nextMonthButton.click();
+          await delay(300);
+          checkAndNavigate();
+        }
+      }
+      callback();
+    }
+  }
+  checkAndNavigate();
+}
