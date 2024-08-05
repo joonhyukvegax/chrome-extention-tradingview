@@ -122,7 +122,139 @@ function isMatchingMonthYear(dateString, monthYearText) {
  *   // ... more rows
  * ]
  */
-const gatherData = () => {
+// const gatherData = () => {
+//   let gatherData = [];
+//   const inputDialog = document.querySelector(".content-tBgV1m0B");
+
+//   if (!inputDialog) {
+//     return alert("open Inputs Dialog");
+//   }
+//   let inputs = [];
+
+//   const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
+//   let obj = {};
+//   for (let i = 0; i < cells.length; i++) {
+//     const cell = cells[i];
+
+//     const checkElem = cell.classList.contains("fill-tBgV1m0B");
+
+//     if (checkElem) {
+//       const labelElem = cell.querySelector(".label-ZOx_CVY3");
+//       const checkbox = cell.querySelector("input[type='checkbox']");
+//       if (labelElem && checkbox) {
+//         obj = {
+//           type: "input",
+//           label: labelElem.innerText.trim(),
+//           value: checkbox.checked ? "on" : "off",
+//         };
+
+//         inputs.push(obj);
+//       }
+//       continue;
+//     }
+
+//     const labelElem = cell.classList.contains("first-tBgV1m0B");
+//     if (labelElem) {
+//       const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
+//       if (labelInnerElem) {
+//         obj = {
+//           type: "input",
+//           label: labelInnerElem.innerText.trim(),
+//           value: "",
+//         };
+//         const nextCell = cells[i + 1];
+//         if (nextCell) {
+//           const input = nextCell.querySelector("input");
+//           const button = nextCell.querySelector('span[role="button"]');
+//           if (input) {
+//             obj.value = input.value;
+//           } else if (button) {
+//             const buttonTextElem = button.querySelector(
+//               ".button-children-tFul0OhX span"
+//             );
+//             obj.value = buttonTextElem ? buttonTextElem.innerText.trim() : "";
+//           }
+//         }
+//         inputs.push(obj);
+//       }
+//     }
+//   }
+
+//   const table = document.querySelector(".ka-table");
+
+//   if (table) {
+//     const rows = table.querySelectorAll("tr");
+//     const tableData = [];
+
+//     rows.forEach((row) => {
+//       const rowData = [];
+//       const cells = row.querySelectorAll("th, td");
+
+//       cells.forEach((cell) => {
+//         const combinedText = Array.from(cell.children)
+//           .map((child) => child.innerText.trim())
+//           .join(" ")
+//           .replace(/\u00A0/g, "")
+//           .replace(/\n/g, " ")
+//           .replace(/#/g, " ");
+
+//         rowData.push(combinedText);
+//       });
+
+//       tableData.push(rowData);
+//     });
+
+//     const titleIndex = tableData[0].indexOf("Title");
+//     const allIndex = tableData[0].indexOf("All");
+//     if (titleIndex !== -1 && allIndex !== -1) {
+//       let dataRow = [];
+
+//       tableData.forEach((row) => {
+//         dataRow.push({
+//           type: "table",
+//           label: row[titleIndex],
+//           values: {
+//             all: row[allIndex],
+//           },
+//         });
+//       });
+
+//       gatherData.push([...inputs, ...dataRow]);
+//     }
+//   } else {
+//     console.log("Table not found");
+//   }
+//   return gatherData;
+// };
+
+const waitForElement = (selector, timeout = 5000) => {
+  return new Promise((resolve, reject) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      resolve(element);
+    }
+
+    const observer = new MutationObserver((mutations, obs) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        obs.disconnect();
+        resolve(element);
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    setTimeout(() => {
+      observer.disconnect();
+      reject(new Error(`Timeout waiting for element: ${selector}`));
+    }, timeout);
+  });
+};
+
+const gatherData = async () => {
   let gatherData = [];
   const inputDialog = document.querySelector(".content-tBgV1m0B");
 
@@ -180,6 +312,8 @@ const gatherData = () => {
     }
   }
 
+  await waitForElement(".ka-table", 10000); // 테이블이 로드될 때까지 대기
+
   const table = document.querySelector(".ka-table");
 
   if (table) {
@@ -203,7 +337,7 @@ const gatherData = () => {
 
       tableData.push(rowData);
     });
-
+    console.log(tableData);
     const titleIndex = tableData[0].indexOf("Title");
     const allIndex = tableData[0].indexOf("All");
     if (titleIndex !== -1 && allIndex !== -1) {
@@ -219,8 +353,9 @@ const gatherData = () => {
         });
       });
 
-      gatherData.push([...inputs, ...dataRow]);
+      gatherData.push(...inputs, ...dataRow);
     }
+    console.log(gatherData);
   } else {
     console.log("Table not found");
   }
@@ -232,6 +367,7 @@ const downloadCSV = (collectedData) => {
   const currentDate = new Date();
   const kstDate = new Date(currentDate.getTime() + 9 * 60 * 60 * 1000); // 한국 시간 (UTC+9)
   csvContent += formatDate(kstDate) + "\n";
+  console.log("collectedData", collectedData);
 
   if (!collectedData || collectedData.length === 0) {
     return alert("No data to download");
@@ -555,18 +691,14 @@ async function multipleCollectAndGenerateCSV(
   randomCount = null,
   delayTimeValue
 ) {
-  // TODO: 인풋의 combination을 생성 할때 input stepValue를 고려해서 불가능한 값의 배열이 될 수 있음
   const inputLabels = inputs.map((input) => input.label);
   let combinations = generateStepCombinations(inputs);
-  // 랜덤 갯수만큼 조합을 선택
   if (randomCount && randomCount > 0) {
     combinations = fisherYatesShuffle(combinations).slice(0, randomCount);
   }
 
   const currentID = Date.now();
-  const type = "param_search"; // "param_search" or "back_testing"
-
-  // 라벨과 콤비네이션을 로컬스토리지에 저장 (히스토리 방식으로 저장)
+  const type = "param_search";
 
   const savedHistory = loadFromLocalStorage("param_search_history") || [];
 
@@ -583,7 +715,7 @@ async function multipleCollectAndGenerateCSV(
         randomCount,
         delayTimeValue,
       },
-      collectData: [], // 새로 추가된 데이터를 저장할 필드
+      collectData: [],
     },
   ];
 
@@ -652,12 +784,13 @@ async function multipleCollectAndGenerateCSV(
       }
     }
 
-    await waitForSpinner(delayTimeValue ? delayTimeValue : 5000);
+    // await waitForSpinner(delayTimeValue ? delayTimeValue : 5000);
 
-    const currentData = gatherData();
+    const currentData = await gatherData();
     collectData.push(...currentData);
 
-    // 업데이트된 히스토리로 교체
+    console.log(collectData);
+
     const updatedHistory = (
       loadFromLocalStorage("param_search_history") || []
     ).map((history) => {
@@ -678,6 +811,134 @@ async function multipleCollectAndGenerateCSV(
   }
   downloadCSV(collectData);
 }
+// async function multipleCollectAndGenerateCSV(
+//   inputs,
+//   randomCount = null,
+//   delayTimeValue
+// ) {
+//   // TODO: 인풋의 combination을 생성 할때 input stepValue를 고려해서 불가능한 값의 배열이 될 수 있음
+//   const inputLabels = inputs.map((input) => input.label);
+//   let combinations = generateStepCombinations(inputs);
+//   // 랜덤 갯수만큼 조합을 선택
+//   if (randomCount && randomCount > 0) {
+//     combinations = fisherYatesShuffle(combinations).slice(0, randomCount);
+//   }
+
+//   const currentID = Date.now();
+//   const type = "param_search"; // "param_search" or "back_testing"
+
+//   // 라벨과 콤비네이션을 로컬스토리지에 저장 (히스토리 방식으로 저장)
+
+//   const savedHistory = loadFromLocalStorage("param_search_history") || [];
+
+//   const newSavedHistory = [
+//     ...savedHistory,
+//     {
+//       _id: currentID,
+//       type,
+//       createdAt: formatDate(new Date()),
+//       inputLabels,
+//       combinations,
+//       setting: {
+//         inputs,
+//         randomCount,
+//         delayTimeValue,
+//       },
+//       collectData: [], // 새로 추가된 데이터를 저장할 필드
+//     },
+//   ];
+
+//   saveToLocalStorage("param_search_history", newSavedHistory);
+
+//   let collectData = [];
+
+//   for (const combination of combinations) {
+//     const labelCombination = combination.map((value, index) => {
+//       return {
+//         label: inputLabels[index],
+//         value: value,
+//       };
+//     });
+
+//     const inputDialog = document.querySelector(".content-tBgV1m0B");
+
+//     if (!inputDialog) {
+//       alert("open Inputs Dialog");
+//       return;
+//     }
+
+//     for (const data of labelCombination) {
+//       const targetLabel = data.label;
+//       const targetValue = data.value;
+//       const cells = inputDialog.querySelectorAll(".cell-tBgV1m0B");
+
+//       if (cells.length === 0) {
+//         console.error("No cells found");
+//         return;
+//       }
+
+//       for (let i = 0; i < cells.length; i++) {
+//         const cell = cells[i];
+//         const labelElem = cell.classList.contains("first-tBgV1m0B");
+//         const labelInnerElem = cell.querySelector(".inner-tBgV1m0B");
+
+//         if (labelElem && labelInnerElem.innerText.trim() === targetLabel) {
+//           const cellValue = cells[i + 1];
+//           if (cellValue) {
+//             const input = cellValue.querySelector("input");
+//             if (input) {
+//               input.focus();
+//               input.select();
+
+//               const buttons = cellValue
+//                 .querySelector(".controlWrapper-DBTazUk2")
+//                 .querySelectorAll("button");
+
+//               if (buttons.length > 0) {
+//                 const increaseButton = buttons[0];
+//                 const decreaseButton = buttons[1];
+
+//                 await adjustValue(
+//                   input,
+//                   targetValue,
+//                   increaseButton,
+//                   decreaseButton
+//                 );
+//               } else {
+//                 alert("Increase and Decrease buttons not found");
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }
+
+//     await waitForSpinner(delayTimeValue ? delayTimeValue : 5000);
+
+//     const currentData = gatherData();
+//     collectData.push(...currentData);
+
+//     // 업데이트된 히스토리로 교체
+//     const updatedHistory = (
+//       loadFromLocalStorage("param_search_history") || []
+//     ).map((history) => {
+//       if (history._id === currentID) {
+//         const updatedCombinations = history.combinations.filter(
+//           (comb) => JSON.stringify(comb) !== JSON.stringify(combination)
+//         );
+//         return {
+//           ...history,
+//           combinations: updatedCombinations,
+//           collectData: [...history.collectData, ...currentData],
+//         };
+//       }
+//       return history;
+//     });
+
+//     saveToLocalStorage("param_search_history", updatedHistory);
+//   }
+//   downloadCSV(collectData);
+// }
 
 async function getBackTestingAction(
   dateRanges,
@@ -830,7 +1091,7 @@ async function continueCollectAndGenerateCSV(history) {
 
     await waitForSpinner(delayTimeValue ? delayTimeValue : 5000);
 
-    const currentData = gatherData();
+    const currentData = await gatherData();
     collectData.push(...currentData);
 
     // 업데이트된 히스토리로 교체
